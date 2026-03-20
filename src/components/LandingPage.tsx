@@ -24,7 +24,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onProfessorClick, onDeveloper
         <h1 className="text-5xl font-black text-blue-900 uppercase tracking-wider leading-none mb-3">ACM</h1>
         <div className="h-1.5 w-24 bg-yellow-500 rounded-full mb-6"></div>
         <p className="text-lg md:text-xl font-bold text-blue-800 leading-tight tracking-wide">
-          Automated Cabinet Management System
+          ACM
         </p>
         <p className="text-sm md:text-base font-semibold text-yellow-600 mt-2 uppercase tracking-[0.15em]">
           Rizal Technological University
