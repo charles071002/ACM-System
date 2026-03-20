@@ -270,13 +270,17 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
-      <header className="bg-white border-b-2 border-yellow-500 text-blue-900 p-3 shadow-sm relative flex flex-col items-center justify-center text-center z-30 flex-shrink-0">
-        <h1 className="text-xl font-black uppercase tracking-wider leading-none mb-0.5">ACM</h1>
-        <p className="text-[10px] font-bold text-blue-800 uppercase tracking-wide">Automated Cabinet Management System</p>
-        <p className="text-[8px] font-semibold text-yellow-600 uppercase tracking-wider">Rizal Technological University</p>
+      <header className="bg-white border-b-4 border-yellow-500 text-blue-900 p-6 shadow-sm relative flex flex-col items-center justify-center text-center z-10 flex-shrink-0">
+        <h1 className="text-2xl font-black uppercase tracking-wider leading-none mb-1">ACM</h1>
+        <p className="text-xs md:text-sm font-bold text-blue-800 tracking-wide">Automated Cabinet Management System</p>
+        <p className="text-[10px] md:text-xs font-semibold text-yellow-600 uppercase tracking-wider">Rizal Technological University</p>
         
         <div className="absolute right-6 top-1/2 -translate-y-1/2" ref={menuRef}>
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 hover:bg-yellow-50 text-blue-900 rounded-full transition-colors flex items-center justify-center">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-2 hover:bg-yellow-50 text-yellow-600 rounded-full transition-colors flex items-center justify-center"
+            aria-label="Open dashboard menu"
+          >
             <Menu size={24} />
           </button>
 
