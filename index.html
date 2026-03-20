@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACM System - Rizal Technological University</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Hide native date/time picker icons */
+      input[type="date"]::-webkit-calendar-picker-indicator,
+      input[type="time"]::-webkit-calendar-picker-indicator {
+        display: none;
+        -webkit-appearance: none;
+      }
+
+      /* Standardizing inputs for mobile responsiveness */
+      input[type="date"], input[type="time"] {
+        appearance: none;
+        -webkit-appearance: none;
+        min-height: 3rem;
+      }
+
+      /*
+         HIDE SCROLLBARS GLOBALLY
+         Removes visible scroll bars from all elements while maintaining scrolling behavior.
+      */
+      * {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+
+      *::-webkit-scrollbar {
+        display: none; /* Chrome, Safari and Opera */
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900 overflow-x-hidden">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

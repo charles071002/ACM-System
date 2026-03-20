@@ -1,0 +1,7 @@
+{
+  "name": "02/28/26 of ACM - Automated Cabinet Management",
+  "description": "A sophisticated management system for Rizal Technological University to monitor and control automated storage cabinets, featuring professor-level access and hardware integration insights.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
