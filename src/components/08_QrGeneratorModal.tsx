@@ -1,6 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
-import { X, QrCode, CheckCircle2, Download, AlertCircle, FileText, Image as ImageIcon } from 'lucide-react';
+import {
+  X,
+  QrCode,
+  CheckCircle2,
+  Download,
+  AlertCircle,
+  FileText,
+  Image as ImageIcon,
+} from 'lucide-react';
 import { Professor, QrRecord } from '../types';
 import { StorageService } from '../lib/storage';
 
@@ -12,11 +19,11 @@ interface QrGeneratorModalProps {
 
 const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose, initialRecord }) => {
   const [qrName, setQrName] = useState(initialRecord?.name || '');
-  
+
   // Separate Date and Time state for Start
   const [startDate, setStartDate] = useState('');
   const [startTime, setStartTime] = useState('');
-  
+
   // Separate Date and Time state for Expiry
   const [expiryDate, setExpiryDate] = useState('');
   const [expiryTime, setExpiryTime] = useState('');
@@ -47,7 +54,7 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
         setStartDate(formatDate(s));
         setStartTime(formatTime(s));
       }
-      
+
       const e = new Date(initialRecord.expiresAt);
       if (!isNaN(e.getTime())) {
         setExpiryDate(formatDate(e));
@@ -64,9 +71,9 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
         // Default to current time for first QR
         start = new Date();
       }
-      
+
       const recommendedExpiry = new Date(start.getTime() + 60 * 60 * 1000);
-      
+
       setStartDate(formatDate(start));
       setStartTime(formatTime(start));
       setExpiryDate(formatDate(recommendedExpiry));
@@ -88,7 +95,7 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
       }
     }
   }, [startDate, startTime, initialRecord]);
-  
+
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -99,23 +106,23 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!qrName || !startDate || !startTime || !expiryDate || !expiryTime) return;
-    
+
     const startDateTime = new Date(`${startDate}T${startTime}`);
     const expiryDateTime = new Date(`${expiryDate}T${expiryTime}`);
-    
+
     if (isNaN(startDateTime.getTime()) || isNaN(expiryDateTime.getTime())) {
-      setValidationError("Invalid date or time entered.");
+      setValidationError('Invalid date or time entered.');
       return;
     }
 
     if (expiryDateTime <= startDateTime) {
-      setValidationError("Expiration must be after Start time.");
+      setValidationError('Expiration must be after Start time.');
       return;
     }
 
     // OVERLAP CHECK: Disallow multiple QR codes for the same interval
     const existingRecords = StorageService.getQrRecords(professor.id);
-    const hasOverlap = existingRecords.some(record => {
+    const hasOverlap = existingRecords.some((record) => {
       // If editing, ignore the original version of this record
       if (initialRecord && record.id === initialRecord.id) return false;
 
@@ -123,17 +130,21 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
       const existingEnd = new Date(record.expiresAt);
 
       // standard interval overlap formula: (StartA < EndB) and (EndA > StartB)
-      return (startDateTime < existingEnd && expiryDateTime > existingStart);
+      return startDateTime < existingEnd && expiryDateTime > existingStart;
     });
 
     if (hasOverlap) {
-      setValidationError("Time Conflict: An active QR Code already exists for this interval.");
+      setValidationError('Time Conflict: An active QR Code already exists for this interval.');
       return;
     }
 
     setValidationError(null);
-    const encodedData = encodeURIComponent(`ACM_SYNC:${qrName}:${startDateTime.toISOString()}:${expiryDateTime.toISOString()}`);
-    setGeneratedUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedData}`);
+    const encodedData = encodeURIComponent(
+      `ACM_SYNC:${qrName}:${startDateTime.toISOString()}:${expiryDateTime.toISOString()}`,
+    );
+    setGeneratedUrl(
+      `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedData}`,
+    );
   };
 
   const downloadQrImage = async (qrUrl: string, fileName: string) => {
@@ -170,27 +181,27 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
       await downloadQrImage(generatedUrl, `${safeName}.png`);
     } else {
       openPrintWindow(`
-          <html>
-            <head><title>ACM QR - ${qrName}</title></head>
-            <body style="margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; background:#f9fafb;">
-              <div style="text-align:center; padding:50px; border:8px solid #1e3a8a; border-radius:50px; background:white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
-                <h1 style="color:#1e3a8a; margin:0; font-size:2.5rem; font-weight:900;">ACM SYSTEM</h1>
-                <p style="color:#ca8a04; font-weight:bold; letter-spacing:0.1em; margin-bottom:30px; text-transform:uppercase;">${qrName}</p>
-                <img src="${generatedUrl}" style="width:300px; height:300px; padding:10px; border:2px solid #e5e7eb; border-radius:20px;" />
-                <p style="margin-top:30px; font-size:0.9rem; font-weight:bold; color:#1e3a8a;">RIZAL TECHNOLOGICAL UNIVERSITY</p>
-                <p style="font-size:0.7rem; color:#9ca3af; margin-top:5px;">Generated on ${new Date().toLocaleDateString()}</p>
-              </div>
-              <script>
-                window.onload = () => {
-                  setTimeout(() => {
-                    window.print();
-                    window.close();
-                  }, 500);
-                };
-              </script>
-            </body>
-          </html>
-        `);
+        <html>
+          <head><title>ACM QR - ${qrName}</title></head>
+          <body style="margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; background:#f9fafb;">
+            <div style="text-align:center; padding:50px; border:8px solid #1e3a8a; border-radius:50px; background:white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+              <h1 style="color:#1e3a8a; margin:0; font-size:2.5rem; font-weight:900;">ACM SYSTEM</h1>
+              <p style="color:#ca8a04; font-weight:bold; letter-spacing:0.1em; margin-bottom:30px; text-transform:uppercase;">${qrName}</p>
+              <img src="${generatedUrl}" style="width:300px; height:300px; padding:10px; border:2px solid #e5e7eb; border-radius:20px;" />
+              <p style="margin-top:30px; font-size:0.9rem; font-weight:bold; color:#1e3a8a;">RIZAL TECHNOLOGICAL UNIVERSITY</p>
+              <p style="font-size:0.7rem; color:#9ca3af; margin-top:5px;">Generated on ${new Date().toLocaleDateString()}</p>
+            </div>
+            <script>
+              window.onload = () => {
+                setTimeout(() => {
+                  window.print();
+                  window.close();
+                }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
     }
   };
 
@@ -200,19 +211,19 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
       const expiryDateTime = new Date(`${expiryDate}T${expiryTime}`);
 
       if (isNaN(startDateTime.getTime()) || isNaN(expiryDateTime.getTime())) {
-        alert("Error saving: Invalid date value.");
+        alert('Error saving: Invalid date value.');
         return;
       }
 
       const startIso = startDateTime.toISOString();
       const expiryIso = expiryDateTime.toISOString();
-      
+
       if (initialRecord) {
         StorageService.updateQrRecord(professor.id, {
           ...initialRecord,
           name: qrName,
           startsAt: startIso,
-          expiresAt: expiryIso
+          expiresAt: expiryIso,
         });
       } else {
         StorageService.saveQrRecord(professor.id, qrName, startIso, expiryIso);
@@ -221,24 +232,26 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
     onClose();
   };
 
-  const inputClasses = "w-full bg-gray-50 border-2 border-blue-50 rounded-2xl py-4 px-4 text-center text-sm font-bold text-blue-900 focus:outline-none focus:border-yellow-500 transition-all shadow-inner";
-  const labelClasses = "block text-[10px] font-black text-blue-900 uppercase tracking-widest text-center";
+  const inputClasses =
+    'w-full bg-gray-50 border-2 border-blue-50 rounded-2xl py-4 px-4 text-center text-sm font-bold text-blue-900 focus:outline-none focus:border-yellow-500 transition-all shadow-inner';
+  const labelClasses =
+    'block text-[10px] font-black text-blue-900 uppercase tracking-widest text-center';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500">
         <div className="bg-blue-900 p-8 flex flex-col items-center text-white text-center relative">
-          <button 
+          <button
             onClick={onClose}
             className="absolute top-6 right-6 text-yellow-500/70 hover:text-yellow-400"
           >
             <X size={28} />
           </button>
-          
+
           <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mb-4 shadow-lg border-4 border-white/20">
             <QrCode size={32} className="text-blue-900" />
           </div>
-          
+
           <h3 className="text-xl font-black tracking-tight text-yellow-400 uppercase">
             {initialRecord ? 'Edit Survey' : 'Generate QR Code'}
           </h3>
@@ -335,23 +348,29 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
               <div className="flex flex-col gap-2 w-full">
                 <div className="flex gap-2 relative">
                   <div className="w-full flex flex-col">
-                    <button 
-                      onClick={() => setShowDownloadMenu(!showDownloadMenu)} 
+                    <button
+                      onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                       className="w-full py-3 bg-blue-50 text-blue-900 rounded-xl font-black text-[10px] uppercase flex items-center justify-center gap-2 border-2 border-blue-100 active:scale-95 transition-transform"
                     >
                       <Download size={14} /> Download
                     </button>
-                    
+
                     {showDownloadMenu && (
                       <div className="absolute bottom-full left-0 mb-2 w-full bg-white border-2 border-blue-100 rounded-2xl shadow-2xl z-20 flex flex-col overflow-hidden animate-slide-up">
-                        <button 
-                          onClick={() => { handleDownload('IMAGE'); setShowDownloadMenu(false); }}
+                        <button
+                          onClick={() => {
+                            handleDownload('IMAGE');
+                            setShowDownloadMenu(false);
+                          }}
                           className="px-4 py-3 text-[9px] font-black text-blue-900 uppercase hover:bg-blue-50 border-b border-blue-50 flex items-center justify-between"
                         >
                           Save as Image <ImageIcon size={12} className="text-yellow-600" />
                         </button>
-                        <button 
-                          onClick={() => { handleDownload('PDF'); setShowDownloadMenu(false); }}
+                        <button
+                          onClick={() => {
+                            handleDownload('PDF');
+                            setShowDownloadMenu(false);
+                          }}
                           className="px-4 py-3 text-[9px] font-black text-blue-900 uppercase hover:bg-blue-50 flex items-center justify-between"
                         >
                           Save as PDF <FileText size={12} className="text-yellow-600" />
@@ -377,3 +396,4 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
 };
 
 export default QrGeneratorModal;
+

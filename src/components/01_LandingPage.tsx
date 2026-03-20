@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface LandingPageProps {
@@ -11,7 +10,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onProfessorClick, onDeveloper
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 gap-8 relative overflow-hidden h-full">
       {/* Menu Icon Top-Right (Gold accent) */}
-      <button 
+      <button
         onClick={onOpenManual}
         className="absolute right-6 top-6 p-2 hover:bg-yellow-100 text-yellow-600 rounded-full transition-colors flex items-center justify-center z-50 border border-yellow-200 shadow-sm"
         aria-label="Manual Access"
@@ -44,7 +43,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onProfessorClick, onDeveloper
 
       {/* Developer Trigger - Lower Center */}
       <div className="absolute bottom-12 left-1/2 -translate-x-1/2 animate-fade-in delay-500">
-        <button 
+        <button
           onClick={onDeveloperClick}
           className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-900/40 hover:text-blue-900 transition-colors p-4"
         >
@@ -56,3 +55,4 @@ const LandingPage: React.FC<LandingPageProps> = ({ onProfessorClick, onDeveloper
 };
 
 export default LandingPage;
+

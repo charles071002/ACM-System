@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Professor } from '../types';
 import { INITIAL_PIN } from '../constants';
@@ -31,17 +30,17 @@ const PinModal: React.FC<PinModalProps> = ({ professor, onVerify, onClose }) => 
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500">
         <div className="bg-blue-900 p-10 flex flex-col items-center text-white text-center relative">
-          <button 
+          <button
             onClick={onClose}
             className="absolute top-6 right-6 text-yellow-500/70 hover:text-yellow-400"
           >
             <X size={28} />
           </button>
-          
+
           <div className="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mb-6 shadow-lg border-4 border-white/20">
             <Lock size={36} className="text-blue-900" />
           </div>
-          
+
           <h3 className="text-2xl font-black tracking-tight text-yellow-400">SECURE ACCESS</h3>
           <p className="text-sm font-bold opacity-80 mt-1 uppercase tracking-widest">{professor.name}</p>
         </div>
@@ -49,15 +48,17 @@ const PinModal: React.FC<PinModalProps> = ({ professor, onVerify, onClose }) => 
         <div className="p-10">
           <form onSubmit={handleSubmit} className="flex flex-col gap-8">
             <div className="space-y-4">
-              <label className="block text-xs font-black text-blue-900 uppercase tracking-widest text-center">Enter 6-Digit PIN</label>
+              <label className="block text-xs font-black text-blue-900 uppercase tracking-widest text-center">
+                Enter 6-Digit PIN
+              </label>
               <input
                 type="password"
                 maxLength={6}
                 value={pin}
                 autoFocus
                 onChange={(e) => {
-                    setPin(e.target.value);
-                    setError(false);
+                  setPin(e.target.value);
+                  setError(false);
                 }}
                 placeholder="••••••"
                 className={`w-full bg-gray-50 border-4 ${error ? 'border-red-500' : 'border-blue-50'} rounded-3xl py-6 text-center text-4xl font-black tracking-[0.8em] text-blue-900 focus:outline-none focus:border-yellow-500 transition-all shadow-inner`}
@@ -87,3 +88,4 @@ const PinModal: React.FC<PinModalProps> = ({ professor, onVerify, onClose }) => 
 };
 
 export default PinModal;
+

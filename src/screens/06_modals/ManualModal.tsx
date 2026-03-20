@@ -1,2 +1,2 @@
-export { default } from '../../components/ManualModal';
+export { default } from '../../components/06_ManualModal';
 

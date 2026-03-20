@@ -1,2 +1,2 @@
-export { default } from '../../components/PinModal';
+export { default } from '../../components/07_PinModal';
 

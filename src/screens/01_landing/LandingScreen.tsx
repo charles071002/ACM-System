@@ -1,2 +1,2 @@
-export { default } from '../../components/LandingPage';
+export { default } from '../../components/01_LandingPage';
 

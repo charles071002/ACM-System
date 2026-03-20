@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Professor, QrRecord } from '../types';
 import {
@@ -20,9 +19,9 @@ import {
   Box,
 } from 'lucide-react';
 import { StorageService } from '../lib/storage';
-import ChangePinModal from './ChangePinModal';
-import QrGeneratorModal from './QrGeneratorModal';
-import HistoryModal from './HistoryModal';
+import ChangePinModal from './10_ChangePinModal';
+import QrGeneratorModal from './08_QrGeneratorModal';
+import HistoryModal from './09_HistoryModal';
 
 interface DashboardProps {
   professor: Professor;
@@ -42,21 +41,19 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
   const [showCompartmentDownloadMenu, setShowCompartmentDownloadMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const activeQrIdAtLastCheck = useRef<string | null>(null);
-  
+
   const [submissionCount, setSubmissionCount] = useState(() => StorageService.getSubmissions(professor.id));
   const [qrRecords, setQrRecords] = useState<QrRecord[]>([]);
 
   // Current active compartment QR data (persistent)
   const [compartmentData, setCompartmentData] = useState(() => StorageService.getCompartmentData(professor.id, professor.name));
 
-  /** 
+  /**
    * Fetches latest logs from persistent storage and updates local state.
    */
   const refreshLogs = () => {
     const logs = StorageService.getQrRecords(professor.id);
-    const sortedLogs = [...logs].sort((a, b) => 
-      new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime()
-    );
+    const sortedLogs = [...logs].sort((a, b) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime());
     setQrRecords(sortedLogs);
   };
 
@@ -75,7 +72,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
   useEffect(() => {
     const monitorSystem = () => {
       const now = new Date();
-      const activeQr = qrRecords.find(r => {
+      const activeQr = qrRecords.find((r) => {
         const start = new Date(r.startsAt);
         const end = new Date(r.expiresAt);
         return now >= start && now <= end;
@@ -84,13 +81,13 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
       const currentActiveId = activeQr?.id || null;
 
       if (activeQrIdAtLastCheck.current && activeQrIdAtLastCheck.current !== currentActiveId) {
-        const recentlyActiveRecord = qrRecords.find(r => r.id === activeQrIdAtLastCheck.current);
+        const recentlyActiveRecord = qrRecords.find((r) => r.id === activeQrIdAtLastCheck.current);
         if (recentlyActiveRecord && now > new Date(recentlyActiveRecord.expiresAt)) {
           if (submissionCount > 0) {
             const startTimeStr = new Date(recentlyActiveRecord.startsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const endTimeStr = new Date(recentlyActiveRecord.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const contextLabel = `${recentlyActiveRecord.name} (${startTimeStr} - ${endTimeStr})`;
-            
+
             StorageService.saveHistoryRecord(professor.id, submissionCount, contextLabel);
             setSubmissionCount(0);
           }
@@ -100,16 +97,14 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
       activeQrIdAtLastCheck.current = currentActiveId;
 
       const validRecords = StorageService.cleanupExpiredQrRecords(professor.id);
-      const sortedValid = [...validRecords].sort((a, b) => 
-        new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime()
-      );
+      const sortedValid = [...validRecords].sort((a, b) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime());
 
       if (sortedValid.length !== qrRecords.length) {
         setQrRecords(sortedValid);
       }
-      
+
       if (!currentActiveId && submissionCount > 0 && !activeQrIdAtLastCheck.current) {
-         setSubmissionCount(0);
+        setSubmissionCount(0);
       }
     };
 
@@ -139,17 +134,17 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
 
   const handleLoadCellTrigger = () => {
     const now = new Date();
-    const activeQr = qrRecords.find(r => {
+    const activeQr = qrRecords.find((r) => {
       const start = new Date(r.startsAt);
       const end = new Date(r.expiresAt);
       return now >= start && now <= end;
     });
 
     if (!activeQr) {
-      alert("TRIGGER DENIED: NO ACTIVE SESSION DETECTED. SUBMISSIONS ARE ONLY RECORDED DURING THE VALIDITY PERIOD OF A QR CODE.");
+      alert('TRIGGER DENIED: NO ACTIVE SESSION DETECTED. SUBMISSIONS ARE ONLY RECORDED DURING THE VALIDITY PERIOD OF A QR CODE.');
       return;
     }
-    setSubmissionCount(prev => prev + 1);
+    setSubmissionCount((prev) => prev + 1);
   };
 
   const handleClearQrRecords = () => {
@@ -274,7 +269,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
         <h1 className="text-2xl font-black uppercase tracking-wider leading-none mb-1">ACM</h1>
         <p className="text-xs md:text-sm font-bold text-blue-800 tracking-wide">Automated Cabinet Management System</p>
         <p className="text-[10px] md:text-xs font-semibold text-yellow-600 uppercase tracking-wider">Rizal Technological University</p>
-        
+
         <div className="absolute right-6 top-1/2 -translate-y-1/2" ref={menuRef}>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -286,19 +281,43 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
 
           {isMenuOpen && (
             <div className="absolute right-0 mt-2 w-64 bg-white border-2 border-yellow-500 rounded-2xl shadow-2xl overflow-hidden animate-scale-up z-50">
-              <button onClick={() => { setIsHistoryOpen(true); setIsMenuOpen(false); }} className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100">
+              <button
+                onClick={() => {
+                  setIsHistoryOpen(true);
+                  setIsMenuOpen(false);
+                }}
+                className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
+              >
                 <History size={18} className="text-yellow-600" />
                 <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">View History</span>
               </button>
-              <button onClick={() => { setIsCompartmentQrOpen(true); setIsMenuOpen(false); }} className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100">
+              <button
+                onClick={() => {
+                  setIsCompartmentQrOpen(true);
+                  setIsMenuOpen(false);
+                }}
+                className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
+              >
                 <Box size={18} className="text-yellow-600" />
                 <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Compartment QR</span>
               </button>
-              <button onClick={() => { setIsChangePinOpen(true); setIsMenuOpen(false); }} className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100">
+              <button
+                onClick={() => {
+                  setIsChangePinOpen(true);
+                  setIsMenuOpen(false);
+                }}
+                className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
+              >
                 <Key size={18} className="text-yellow-600" />
                 <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Change PIN Code</span>
               </button>
-              <button onClick={() => { onOpenManual(); setIsMenuOpen(false); }} className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors">
+              <button
+                onClick={() => {
+                  onOpenManual();
+                  setIsMenuOpen(false);
+                }}
+                className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors"
+              >
                 <BookOpen size={18} className="text-yellow-600" />
                 <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Professor Manual</span>
               </button>
@@ -321,16 +340,12 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
 
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4 w-full mt-12">
             <div className="flex flex-col gap-3 min-w-0 flex-1 px-1">
-              <h2 className="text-sm font-black text-blue-900 tracking-wide uppercase">
-                Professor dashboard
-              </h2>
+              <h2 className="text-sm font-black text-blue-900 tracking-wide uppercase">Professor dashboard</h2>
               <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1">
                 <span className="text-yellow-600/50 select-none font-light" aria-hidden>
                   |
                 </span>
-                <span className="font-black text-yellow-600 uppercase tracking-widest text-[11px] sm:text-[13px]">
-                  {professor.name}
-                </span>
+                <span className="font-black text-yellow-600 uppercase tracking-widest text-[11px] sm:text-[13px]">{professor.name}</span>
                 <span className="text-yellow-600/50 select-none font-light" aria-hidden>
                   |
                 </span>
@@ -347,9 +362,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
                   Live Monitoring
                 </span>
               </div>
-              <div className="text-4xl sm:text-5xl font-black text-yellow-400 drop-shadow-md tracking-tighter leading-none">
-                {submissionCount}
-              </div>
+              <div className="text-4xl sm:text-5xl font-black text-yellow-400 drop-shadow-md tracking-tighter leading-none">{submissionCount}</div>
               <p className="text-[7px] sm:text-[8px] font-black uppercase tracking-[0.12em] text-white/90 mt-1.5 text-center">
                 Submissions Detected
               </p>
@@ -358,10 +371,19 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full mb-6">
-            <button onClick={() => { setEditingRecord(null); setIsQrGeneratorOpen(true); }} className="w-full sm:flex-1 min-w-0 py-3.5 bg-white border-[3px] border-blue-900 text-blue-900 rounded-xl font-black transition-all flex items-center justify-center gap-2 hover:bg-blue-50 text-[10px] uppercase tracking-widest shadow-sm active:translate-y-0.5">
+            <button
+              onClick={() => {
+                setEditingRecord(null);
+                setIsQrGeneratorOpen(true);
+              }}
+              className="w-full sm:flex-1 min-w-0 py-3.5 bg-white border-[3px] border-blue-900 text-blue-900 rounded-xl font-black transition-all flex items-center justify-center gap-2 hover:bg-blue-50 text-[10px] uppercase tracking-widest shadow-sm active:translate-y-0.5"
+            >
               <QrCode size={16} className="text-yellow-600 shrink-0" /> GENERATE QR CODE
             </button>
-            <button onClick={handleLoadCellTrigger} className="w-full sm:flex-1 min-w-0 py-3.5 bg-white border-[3px] border-blue-900 text-blue-900 rounded-xl font-black transition-all flex items-center justify-center gap-2 hover:bg-blue-50 text-[10px] uppercase tracking-widest shadow-sm active:translate-y-0.5">
+            <button
+              onClick={handleLoadCellTrigger}
+              className="w-full sm:flex-1 min-w-0 py-3.5 bg-white border-[3px] border-blue-900 text-blue-900 rounded-xl font-black transition-all flex items-center justify-center gap-2 hover:bg-blue-50 text-[10px] uppercase tracking-widest shadow-sm active:translate-y-0.5"
+            >
               <Weight size={16} className="text-yellow-600 shrink-0" /> LOAD CELL TRIGGER
             </button>
           </div>
@@ -377,13 +399,16 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
                 </button>
               )}
             </div>
-            
+
             <div className="space-y-3">
               {qrRecords.length > 0 ? (
                 qrRecords.map((record) => (
-                  <button 
-                    key={record.id} 
-                    onClick={() => { setSelectedLog(record); setShowLogDownloadMenu(false); }}
+                  <button
+                    key={record.id}
+                    onClick={() => {
+                      setSelectedLog(record);
+                      setShowLogDownloadMenu(false);
+                    }}
                     className="w-full text-left bg-white border-2 border-blue-100 rounded-2xl p-4 shadow-sm flex items-center justify-between group animate-fade-in hover:border-yellow-500 transition-all active:scale-[0.98]"
                   >
                     <div className="flex items-center gap-3">
@@ -411,8 +436,6 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
               )}
             </div>
           </div>
-
-          {/* Hardware Status card removed (requested). */}
         </div>
       </main>
 
@@ -421,7 +444,13 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
         <div className="fixed inset-0 z-[110] flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl border-4 border-yellow-500 animate-scale-up">
             <div className="bg-blue-900 p-8 flex flex-col items-center text-white relative">
-              <button onClick={() => { setIsCompartmentQrOpen(false); setShowCompartmentDownloadMenu(false); }} className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors">
+              <button
+                onClick={() => {
+                  setIsCompartmentQrOpen(false);
+                  setShowCompartmentDownloadMenu(false);
+                }}
+                className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors"
+              >
                 <X size={28} />
               </button>
               <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mb-3">
@@ -437,25 +466,25 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Assigned to</p>
                 <p className="text-lg font-black text-blue-900 uppercase">Professor: {professor.name}</p>
               </div>
-              
+
               <div className="flex flex-col gap-2 w-full">
                 <div className="relative">
-                  <button 
-                    onClick={() => setShowCompartmentDownloadMenu(!showCompartmentDownloadMenu)} 
+                  <button
+                    onClick={() => setShowCompartmentDownloadMenu(!showCompartmentDownloadMenu)}
                     className="w-full py-4 bg-blue-50 text-blue-900 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 border-2 border-blue-100 active:scale-95 transition-transform"
                   >
                     <Download size={20} /> Download
                   </button>
-                  
+
                   {showCompartmentDownloadMenu && (
                     <div className="absolute bottom-full left-0 mb-2 w-full bg-white border-2 border-blue-100 rounded-2xl shadow-2xl z-20 flex flex-col overflow-hidden animate-slide-up">
-                      <button 
+                      <button
                         onClick={() => handleDownloadCompartmentQr('IMAGE')}
                         className="px-4 py-3 text-[10px] font-black text-blue-900 uppercase hover:bg-blue-50 border-b border-blue-50 flex items-center justify-between"
                       >
                         Save as Image <ImageIcon size={14} className="text-yellow-600" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDownloadCompartmentQr('PDF')}
                         className="px-4 py-3 text-[10px] font-black text-blue-900 uppercase hover:bg-blue-50 flex items-center justify-between"
                       >
@@ -465,8 +494,11 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
                   )}
                 </div>
 
-                <button 
-                  onClick={() => { setIsCompartmentQrOpen(false); setShowCompartmentDownloadMenu(false); }}
+                <button
+                  onClick={() => {
+                    setIsCompartmentQrOpen(false);
+                    setShowCompartmentDownloadMenu(false);
+                  }}
                   className="w-full py-4 bg-blue-900 text-yellow-400 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg hover:bg-blue-800 transition-all border-b-4 border-yellow-600"
                 >
                   Close View
@@ -482,7 +514,13 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-[2.5rem] w-full max-sm overflow-hidden shadow-2xl border-4 border-yellow-500 animate-scale-up">
             <div className="bg-blue-900 p-8 flex flex-col items-center text-white relative">
-              <button onClick={() => { setSelectedLog(null); setShowLogDownloadMenu(false); }} className="absolute top-6 right-6 text-white/70 hover:text-white">
+              <button
+                onClick={() => {
+                  setSelectedLog(null);
+                  setShowLogDownloadMenu(false);
+                }}
+                className="absolute top-6 right-6 text-white/70 hover:text-white"
+              >
                 <X size={28} />
               </button>
               <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mb-3">
@@ -492,16 +530,20 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
             </div>
             <div className="p-6 flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={() => { setEditingRecord(selectedLog); setIsQrGeneratorOpen(true); setSelectedLog(null); }}
+                <button
+                  onClick={() => {
+                    setEditingRecord(selectedLog);
+                    setIsQrGeneratorOpen(true);
+                    setSelectedLog(null);
+                  }}
                   className="flex flex-col items-center gap-2 p-6 bg-blue-50 rounded-[2rem] hover:bg-blue-100 transition-all group active:scale-95"
                 >
                   <Edit3 className="text-blue-900 group-hover:scale-110 transition-transform" size={24} />
                   <span className="text-[10px] font-black uppercase text-blue-900 tracking-tighter">Edit</span>
                 </button>
-                
+
                 <div className="relative flex flex-col">
-                  <button 
+                  <button
                     onClick={() => setShowLogDownloadMenu(!showLogDownloadMenu)}
                     className="w-full flex flex-col items-center gap-2 p-6 bg-blue-50 rounded-[2rem] hover:bg-blue-100 transition-all group active:scale-95 h-full"
                   >
@@ -511,13 +553,13 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
 
                   {showLogDownloadMenu && (
                     <div className="absolute bottom-full left-0 mb-2 w-full bg-white border-2 border-blue-100 rounded-2xl shadow-2xl z-[110] flex flex-col overflow-hidden animate-slide-up">
-                      <button 
+                      <button
                         onClick={() => handleDownloadLog(selectedLog, 'IMAGE')}
                         className="px-4 py-3 text-[9px] font-black text-blue-900 uppercase hover:bg-blue-50 border-b border-blue-50 flex items-center justify-between"
                       >
                         Save Image <ImageIcon size={12} className="text-yellow-600" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDownloadLog(selectedLog, 'PDF')}
                         className="px-4 py-3 text-[9px] font-black text-blue-900 uppercase hover:bg-blue-50 flex items-center justify-between"
                       >
@@ -528,7 +570,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={() => handleDeleteLog(selectedLog.id)}
                 className="w-full flex items-center justify-center gap-3 p-5 bg-red-50 rounded-[2rem] hover:bg-red-100 transition-all group active:scale-95"
               >
@@ -541,17 +583,23 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
       )}
 
       {isChangePinOpen && (
-        <ChangePinModal 
+        <ChangePinModal
           profId={professor.id}
-          onClose={() => setIsChangePinOpen(false)} 
-          onSuccess={() => { setIsChangePinOpen(false); alert("PIN CODE UPDATED SUCCESSFULLY"); }} 
+          onClose={() => setIsChangePinOpen(false)}
+          onSuccess={() => {
+            setIsChangePinOpen(false);
+            alert('PIN CODE UPDATED SUCCESSFULLY');
+          }}
         />
       )}
       {isQrGeneratorOpen && (
-        <QrGeneratorModal 
-          professor={professor} 
+        <QrGeneratorModal
+          professor={professor}
           initialRecord={editingRecord || undefined}
-          onClose={() => { setIsQrGeneratorOpen(false); setEditingRecord(null); }} 
+          onClose={() => {
+            setIsQrGeneratorOpen(false);
+            setEditingRecord(null);
+          }}
         />
       )}
       {isHistoryOpen && <HistoryModal professor={professor} onClose={() => setIsHistoryOpen(false)} />}
@@ -560,3 +608,4 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
 };
 
 export default Dashboard;
+

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Shield, Lock, AlertCircle, ChevronLeft } from 'lucide-react';
 
@@ -19,10 +18,10 @@ const DevLogin: React.FC<DevLoginProps> = ({ onSuccess, onBack }) => {
    */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Strict alphanumeric and length validation for password
     const isPasswordValidFormat = /^[a-zA-Z0-9]{6}$/.test(password);
-    
+
     // Authentication check: username is case-insensitive for input, target is 'DEVELOPER'
     // Password target is '111111'
     if (isPasswordValidFormat && username.toUpperCase() === 'DEVELOPER' && password === '111111') {
@@ -79,7 +78,10 @@ const DevLogin: React.FC<DevLoginProps> = ({ onSuccess, onBack }) => {
                 <input
                   type="text"
                   value={username}
-                  onChange={(e) => { setUsername(e.target.value); setError(false); }}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setError(false);
+                  }}
                   placeholder="Enter Developer ID"
                   className="w-full bg-blue-50 border-2 border-blue-100 rounded-2xl py-4 px-6 text-sm font-bold text-blue-900 focus:outline-none focus:border-yellow-500 transition-all shadow-inner"
                 />
@@ -125,3 +127,4 @@ const DevLogin: React.FC<DevLoginProps> = ({ onSuccess, onBack }) => {
 };
 
 export default DevLogin;
+

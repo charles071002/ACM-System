@@ -1,2 +1,2 @@
-export { default } from '../../components/ProfessorSelect';
+export { default } from '../../components/02_ProfessorSelect';
 

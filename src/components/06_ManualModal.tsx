@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, BookOpen, Settings, Monitor, ShieldCheck, Cpu } from 'lucide-react';
 
@@ -34,7 +33,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ onClose }) => {
               <h4 className="font-black text-xl tracking-tight">Security & Auth</h4>
             </div>
             <p className="text-blue-800 text-sm leading-relaxed font-medium">
-              Access is strictly restricted to verified faculty members. Use the designated university-issued PIN to interact with the cabinet hardware. 
+              Access is strictly restricted to verified faculty members. Use the designated university-issued PIN to interact with the cabinet hardware.
               Logs are transmitted via secure MQTT channels to the central RTU server.
             </p>
           </section>
@@ -45,7 +44,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ onClose }) => {
               <h4 className="font-black text-xl tracking-tight">Live Monitoring</h4>
             </div>
             <p className="text-blue-800 text-sm leading-relaxed font-medium">
-              The dashboard displays data pulled from IR proximity sensors located inside each ACM cabinet slot. 
+              The dashboard displays data pulled from IR proximity sensors located inside each ACM cabinet slot.
               The 'Submitted' state confirms physical presence of student projects within the locked enclosure.
             </p>
           </section>
@@ -59,15 +58,21 @@ const ManualModal: React.FC<ManualModalProps> = ({ onClose }) => {
               <ul className="space-y-4">
                 <li className="flex gap-4 text-sm font-bold text-blue-900">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></div>
-                  <span><strong className="text-yellow-600">Core:</strong> Dual-Core ESP32 IoT Node</span>
+                  <span>
+                    <strong className="text-yellow-600">Core:</strong> Dual-Core ESP32 IoT Node
+                  </span>
                 </li>
                 <li className="flex gap-4 text-sm font-bold text-blue-900">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></div>
-                  <span><strong className="text-yellow-600">Protocol:</strong> WSS (WebSocket Secure) + TLS 1.3</span>
+                  <span>
+                    <strong className="text-yellow-600">Protocol:</strong> WSS (WebSocket Secure) + TLS 1.3
+                  </span>
                 </li>
                 <li className="flex gap-4 text-sm font-bold text-blue-900">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full mt-1.5 flex-shrink-0"></div>
-                  <span><strong className="text-yellow-600">Peripheral:</strong> MFRC522 RFID + 12V Solenoid Locks</span>
+                  <span>
+                    <strong className="text-yellow-600">Peripheral:</strong> MFRC522 RFID + 12V Solenoid Locks
+                  </span>
                 </li>
               </ul>
             </div>
@@ -86,7 +91,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ onClose }) => {
 
         {/* Footer */}
         <div className="p-8 bg-gray-50 border-t-2 border-blue-50 flex justify-center">
-          <button 
+          <button
             onClick={onClose}
             className="px-16 py-4 bg-blue-900 text-yellow-400 font-black text-lg rounded-[1.5rem] hover:bg-blue-800 transition-all active:scale-95 shadow-xl border-b-4 border-yellow-600"
           >
@@ -99,3 +104,4 @@ const ManualModal: React.FC<ManualModalProps> = ({ onClose }) => {
 };
 
 export default ManualModal;
+

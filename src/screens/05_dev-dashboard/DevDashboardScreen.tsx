@@ -1,2 +1,2 @@
-export { default } from '../../components/DevDashboard';
+export { default } from '../../components/05_DevDashboard';
 
