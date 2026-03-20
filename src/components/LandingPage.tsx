@@ -21,7 +21,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onProfessorClick, onDeveloper
 
       {/* Centered Header Text Block - Transparent background, Blue and Gold text */}
       <div className="text-center w-full max-w-lg flex flex-col items-center animate-fade-in px-4">
-        <h1 className="text-5xl font-black text-blue-900 uppercase tracking-wider leading-none mb-3">ACM</h1>
+        <h1
+          className="text-5xl font-black text-blue-900 uppercase tracking-wider leading-none mb-3"
+          style={{ fontFamily: '"Noto Color Emoji"' }}
+        >
+          ACM
+        </h1>
         <div className="h-1.5 w-24 bg-yellow-500 rounded-full mb-6"></div>
         <p className="text-lg md:text-xl font-bold text-blue-800 leading-tight tracking-wide">
           Automated Cabinet Management System
