@@ -2,14 +2,14 @@
 import { Professor, SubmissionData } from './types';
 
 export const PROFESSORS: Professor[] = [
-  { id: '1', name: 'Dr. John Smith', department: 'CPE' },
-  { id: '2', name: 'Engr. Maria Clara', department: 'CPE' },
-  { id: '3', name: 'Prof. Alan Turing', department: 'CPE' },
-  { id: '4', name: 'Dr. Ada Lovelace', department: 'CPE' },
-  { id: '5', name: 'Engr. Jose Rizal', department: 'CPE' },
-  { id: '6', name: 'Prof. Grace Hopper', department: 'CPE' },
-  { id: '7', name: 'Dr. Nikola Tesla', department: 'CPE' },
-  { id: '8', name: 'Engr. Hedy Lamarr', department: 'CPE' }
+  { id: '1', name: 'Engr. Dolores S. Agina', department: 'CPE' },
+  { id: '2', name: 'Dr. Belinda G. Bunag', department: 'CPE' },
+  { id: '3', name: 'Dr. Marife E. Gomez', department: 'CPE' },
+  { id: '4', name: 'Engr. Emelita C. Presbitero', department: 'CPE' },
+  { id: '5', name: 'Engr. Edwin G. Purisima', department: 'CPE' },
+  { id: '6', name: 'Engr. Eugene M. Sadicon', department: 'CPE' },
+  { id: '7', name: 'Engr. Christopher L. Zaplan', department: 'CPE' },
+  { id: '8', name: 'Dr. Ma. Luisa M. Villanueva', department: 'CPE' }
 ];
 
 export const MOCK_SUBMISSIONS: SubmissionData[] = [
