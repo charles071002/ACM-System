@@ -336,7 +336,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
               </div>
             </div>
 
-            <div className="bg-blue-900 rounded-2xl sm:rounded-[1.5rem] p-4 sm:p-5 w-40 sm:w-44 max-w-[min(100%,11rem)] text-white shadow-xl relative overflow-hidden flex flex-col items-center justify-center border-[3px] border-yellow-500 shrink-0 self-end sm:self-start sm:mt-6">
+            <div className="bg-blue-900 rounded-2xl sm:rounded-[1.5rem] p-4 sm:p-5 w-44 sm:w-48 max-w-[min(100%,12rem)] text-white shadow-xl relative overflow-hidden flex flex-col items-center justify-center border-[3px] border-yellow-500 shrink-0 self-end sm:self-start sm:mt-6">
               <div className="flex items-center justify-between w-full gap-2 mb-1.5">
                 <Users className="text-yellow-400 shrink-0" size={18} />
                 <span className="text-[7px] sm:text-[8px] font-black uppercase bg-yellow-500 text-blue-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full animate-pulse text-center leading-tight">
@@ -408,14 +408,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
             </div>
           </div>
 
-          <div className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100 mt-8">
-            <h3 className="font-black text-blue-900 text-[8px] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-              <Weight size={12} className="text-yellow-600" /> Hardware Status
-            </h3>
-            <p className="text-blue-800 text-[10px] leading-relaxed font-medium opacity-80">
-              Sensors synced with main cabinet grid. Auto-counter active and monitoring for load cell updates.
-            </p>
-          </div>
+          {/* Hardware Status card removed (requested). */}
         </div>
       </main>
 
