@@ -44,7 +44,7 @@ const ManualModal: React.FC<ManualModalProps> = ({ onClose }) => {
               <h4 className="font-black text-xl tracking-tight">Live Monitoring</h4>
             </div>
             <p className="text-blue-800 text-sm leading-relaxed font-medium">
-              The dashboard displays data pulled from IR proximity sensors located inside each ACM cabinet slot.
+              The dashboard displays data pulled from IR proximity sensors located inside each ACM cabinet drawer.
               The 'Submitted' state confirms physical presence of student projects within the locked enclosure.
             </p>
           </section>
