@@ -6,7 +6,6 @@ import {
   Weight,
   ChevronLeft,
   QrCode,
-  Menu,
   BookOpen,
   History,
   FileText,
@@ -34,12 +33,10 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
   const [isQrGeneratorOpen, setIsQrGeneratorOpen] = useState(false);
   const [isCompartmentQrOpen, setIsCompartmentQrOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<QrRecord | null>(null);
   const [editingRecord, setEditingRecord] = useState<QrRecord | null>(null);
   const [showLogDownloadMenu, setShowLogDownloadMenu] = useState(false);
   const [showCompartmentDownloadMenu, setShowCompartmentDownloadMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const activeQrIdAtLastCheck = useRef<string | null>(null);
 
   const [submissionCount, setSubmissionCount] = useState(() => StorageService.getSubmissions(professor.id));
@@ -121,16 +118,6 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
       refreshLogs();
     }
   }, [professor.id, isQrGeneratorOpen]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const handleLoadCellTrigger = () => {
     const now = new Date();
@@ -283,76 +270,59 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
               Back
             </button>
 
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 hover:bg-yellow-50 text-yellow-600 rounded-full transition-colors flex items-center justify-center"
-                aria-label="Open dashboard menu"
-              >
-                <Menu size={24} />
-              </button>
-
-              {isMenuOpen && (
-                <div className="absolute right-0 top-full mt-6 w-64 bg-white border-2 border-yellow-500 rounded-2xl shadow-2xl overflow-hidden animate-scale-up z-50">
-                  <button
-                    onClick={() => {
-                      setIsHistoryOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
-                  >
-                    <History size={18} className="text-yellow-600" />
-                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">View History</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsCompartmentQrOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
-                  >
-                    <Box size={18} className="text-yellow-600" />
-                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Compartment QR</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsChangePinOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
-                  >
-                    <Key size={18} className="text-yellow-600" />
-                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Change PIN Code</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      onOpenManual();
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors"
-                  >
-                    <BookOpen size={18} className="text-yellow-600" />
-                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Professor Manual</span>
-                  </button>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={onOpenManual}
+              className="p-2 hover:bg-yellow-50 text-yellow-600 rounded-full transition-colors flex items-center justify-center"
+              aria-label="Manual Access"
+            >
+              <span className="text-2xl" role="img" aria-label="info">
+                ☰
+              </span>
+            </button>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mt-4 mb-4 w-full">
-            <div className="flex flex-col gap-3 min-w-0 flex-1 px-1">
-              <h2 className="text-[20px] font-black text-blue-900 tracking-wide uppercase">Professor dashboard</h2>
-              <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-0 min-w-0 flex-1 px-1">
+              <h2 className="text-[25px] font-black text-blue-900 tracking-wide uppercase">Professor dashboard</h2>
+              <div className="flex flex-col gap-0">
                 <span className="font-black text-yellow-600 uppercase tracking-widest text-[14px] sm:text-[16px]">
                   {professor.name}
                 </span>
                 <span className="text-blue-900 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider opacity-90 whitespace-nowrap">
                   {professor.department} DEPARTMENT
                 </span>
+                <div className="w-full border-t border-blue-900/10 mt-2" />
+                <button
+                  onClick={() => {
+                    setIsHistoryOpen(true);
+                  }}
+                  className="self-start flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-blue-900 hover:text-blue-900 transition-colors p-4 mt-0"
+                >
+                  <History size={16} className="text-yellow-600 shrink-0" /> VIEW HISTORY
+                </button>
+                <div className="w-full border-t border-blue-900/10" />
+                <button
+                  onClick={() => {
+                    setIsCompartmentQrOpen(true);
+                  }}
+                  className="self-start flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-blue-900 hover:text-blue-900 transition-colors p-4 mt-0"
+                >
+                  <Box size={16} className="text-yellow-600 shrink-0" /> COMPARTMENT QR
+                </button>
+                <div className="w-full border-t border-blue-900/10" />
+                <button
+                  onClick={() => {
+                    setIsChangePinOpen(true);
+                  }}
+                  className="self-start flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-blue-900 hover:text-blue-900 transition-colors p-4 mt-0"
+                >
+                  <Key size={16} className="text-yellow-600 shrink-0" /> CHANGE PIN CODE
+                </button>
+                <div className="w-full border-t border-blue-900/10" />
               </div>
             </div>
 
-            <div className="bg-blue-900 rounded-2xl sm:rounded-[1.5rem] p-4 sm:p-5 w-44 sm:w-48 max-w-[min(100%,12rem)] text-white shadow-xl relative overflow-hidden flex flex-col items-center justify-center border-[3px] border-yellow-500 shrink-0 self-start mt-2 sm:mt-4">
+            <div className="bg-blue-900 rounded-2xl sm:rounded-[1.5rem] p-5 sm:p-6 w-56 sm:w-60 max-w-[min(100%,15rem)] text-white shadow-xl relative overflow-hidden flex flex-col items-center justify-center border-[3px] border-yellow-500 shrink-0 self-start mt-5 sm:mt-8 -ml-6 sm:-ml-9 min-h-[150px] sm:min-h-[170px]">
               <div className="flex items-center justify-between w-full gap-2 mb-1.5">
                 <Users className="text-yellow-400 shrink-0" size={18} />
                 <span className="text-[7px] sm:text-[8px] font-black uppercase bg-yellow-500 text-blue-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full animate-pulse text-center leading-tight">
