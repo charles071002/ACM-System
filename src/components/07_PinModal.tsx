@@ -61,7 +61,7 @@ const PinModal: React.FC<PinModalProps> = ({ professor, onVerify, onClose }) => 
                   setError(false);
                 }}
                 placeholder="••••••"
-                className={`w-full bg-gray-50 border-4 ${error ? 'border-red-500' : 'border-blue-50'} rounded-3xl py-6 text-center text-4xl font-black tracking-[0.8em] text-blue-900 focus:outline-none focus:border-yellow-500 transition-all shadow-inner`}
+                className={`w-full bg-gray-50 border-4 ${error ? 'border-red-500' : 'border-blue-50'} rounded-3xl py-4 text-center text-3xl font-black tracking-[0.7em] text-blue-900 focus:outline-none focus:border-yellow-500 transition-all shadow-inner`}
               />
               {error && (
                 <p className="text-red-500 text-xs mt-2 flex items-center justify-center gap-2 font-black">

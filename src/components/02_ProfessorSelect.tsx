@@ -21,26 +21,27 @@ const ProfessorSelect: React.FC<ProfessorSelectProps> = ({ professors, onSelect,
         <p className="text-[10px] md:text-xs font-semibold text-yellow-600 uppercase tracking-wider">
           Rizal Technological University
         </p>
-
-        <button
-          onClick={onOpenManual}
-          className="absolute right-6 top-1/2 -translate-y-1/2 p-2 hover:bg-yellow-50 text-yellow-600 rounded-full transition-colors flex items-center justify-center"
-          aria-label="Manual Access"
-        >
-          <span className="text-2xl" role="img" aria-label="info">☰</span>
-        </button>
       </header>
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto w-full p-6 relative">
         <div className="w-full max-w-5xl mx-auto flex flex-col animate-slide-up relative pt-4">
-          <div className="absolute top-0 left-0 z-20">
+          {/* Top row: Back (left) + Manual menu (right) */}
+          <div className="flex items-center justify-between gap-4 mb-6 px-1">
             <button
               onClick={onBack}
               className="p-2 hover:bg-blue-50 rounded-full transition-colors flex items-center gap-1 text-blue-900 font-bold"
             >
               <ChevronLeft size={20} className="text-yellow-600" />
               Back
+            </button>
+
+            <button
+              onClick={onOpenManual}
+              className="p-2 hover:bg-yellow-50 text-yellow-600 rounded-full transition-colors flex items-center justify-center"
+              aria-label="Manual Access"
+            >
+              <span className="text-2xl" role="img" aria-label="info">☰</span>
             </button>
           </div>
 

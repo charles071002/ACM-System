@@ -269,66 +269,12 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
         <h1 className="text-2xl font-black uppercase tracking-wider leading-none mb-1">ACM</h1>
         <p className="text-xs md:text-sm font-bold text-blue-800 tracking-wide">Automated Cabinet Management System</p>
         <p className="text-[10px] md:text-xs font-semibold text-yellow-600 uppercase tracking-wider">Rizal Technological University</p>
-
-        <div className="absolute right-6 top-1/2 -translate-y-1/2" ref={menuRef}>
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 hover:bg-yellow-50 text-yellow-600 rounded-full transition-colors flex items-center justify-center"
-            aria-label="Open dashboard menu"
-          >
-            <Menu size={24} />
-          </button>
-
-          {isMenuOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border-2 border-yellow-500 rounded-2xl shadow-2xl overflow-hidden animate-scale-up z-50">
-              <button
-                onClick={() => {
-                  setIsHistoryOpen(true);
-                  setIsMenuOpen(false);
-                }}
-                className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
-              >
-                <History size={18} className="text-yellow-600" />
-                <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">View History</span>
-              </button>
-              <button
-                onClick={() => {
-                  setIsCompartmentQrOpen(true);
-                  setIsMenuOpen(false);
-                }}
-                className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
-              >
-                <Box size={18} className="text-yellow-600" />
-                <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Compartment QR</span>
-              </button>
-              <button
-                onClick={() => {
-                  setIsChangePinOpen(true);
-                  setIsMenuOpen(false);
-                }}
-                className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
-              >
-                <Key size={18} className="text-yellow-600" />
-                <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Change PIN Code</span>
-              </button>
-              <button
-                onClick={() => {
-                  onOpenManual();
-                  setIsMenuOpen(false);
-                }}
-                className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors"
-              >
-                <BookOpen size={18} className="text-yellow-600" />
-                <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Professor Manual</span>
-              </button>
-            </div>
-          )}
-        </div>
       </header>
 
       <main className="flex-1 overflow-y-auto w-full p-6 relative">
         <div className="w-full max-w-5xl mx-auto flex flex-col animate-fade-in relative pt-4 pb-10">
-          <div className="absolute top-0 left-0 z-20">
+          {/* Top row: Back (left) + dashboard menu (right) */}
+          <div className="flex items-center justify-between gap-4 mb-4 px-1 relative z-20">
             <button
               onClick={onBack}
               className="p-2 hover:bg-blue-50 rounded-full transition-colors flex items-center gap-1 text-blue-900 font-bold"
@@ -336,26 +282,77 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
               <ChevronLeft size={20} className="text-yellow-600" />
               Back
             </button>
+
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 hover:bg-yellow-50 text-yellow-600 rounded-full transition-colors flex items-center justify-center"
+                aria-label="Open dashboard menu"
+              >
+                <Menu size={24} />
+              </button>
+
+              {isMenuOpen && (
+                <div className="absolute right-0 top-full mt-6 w-64 bg-white border-2 border-yellow-500 rounded-2xl shadow-2xl overflow-hidden animate-scale-up z-50">
+                  <button
+                    onClick={() => {
+                      setIsHistoryOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
+                  >
+                    <History size={18} className="text-yellow-600" />
+                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">View History</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsCompartmentQrOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
+                  >
+                    <Box size={18} className="text-yellow-600" />
+                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Compartment QR</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsChangePinOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
+                  >
+                    <Key size={18} className="text-yellow-600" />
+                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Change PIN Code</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onOpenManual();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors"
+                  >
+                    <BookOpen size={18} className="text-yellow-600" />
+                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Professor Manual</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4 w-full mt-12">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mt-4 mb-4 w-full">
             <div className="flex flex-col gap-3 min-w-0 flex-1 px-1">
-              <h2 className="text-sm font-black text-blue-900 tracking-wide uppercase">Professor dashboard</h2>
-              <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1">
-                <span className="text-yellow-600/50 select-none font-light" aria-hidden>
-                  |
+              <h2 className="text-[20px] font-black text-blue-900 tracking-wide uppercase">Professor dashboard</h2>
+              <div className="flex flex-col gap-1">
+                <span className="font-black text-yellow-600 uppercase tracking-widest text-[14px] sm:text-[16px]">
+                  {professor.name}
                 </span>
-                <span className="font-black text-yellow-600 uppercase tracking-widest text-[11px] sm:text-[13px]">{professor.name}</span>
-                <span className="text-yellow-600/50 select-none font-light" aria-hidden>
-                  |
-                </span>
-                <span className="text-blue-900 font-bold text-[8px] sm:text-[9px] uppercase tracking-wider opacity-90 whitespace-nowrap">
+                <span className="text-blue-900 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider opacity-90 whitespace-nowrap">
                   {professor.department} DEPARTMENT
                 </span>
               </div>
             </div>
 
-            <div className="bg-blue-900 rounded-2xl sm:rounded-[1.5rem] p-4 sm:p-5 w-44 sm:w-48 max-w-[min(100%,12rem)] text-white shadow-xl relative overflow-hidden flex flex-col items-center justify-center border-[3px] border-yellow-500 shrink-0 self-end sm:self-start sm:mt-6">
+            <div className="bg-blue-900 rounded-2xl sm:rounded-[1.5rem] p-4 sm:p-5 w-44 sm:w-48 max-w-[min(100%,12rem)] text-white shadow-xl relative overflow-hidden flex flex-col items-center justify-center border-[3px] border-yellow-500 shrink-0 self-start mt-2 sm:mt-4">
               <div className="flex items-center justify-between w-full gap-2 mb-1.5">
                 <Users className="text-yellow-400 shrink-0" size={18} />
                 <span className="text-[7px] sm:text-[8px] font-black uppercase bg-yellow-500 text-blue-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full animate-pulse text-center leading-tight">
