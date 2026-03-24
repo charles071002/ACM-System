@@ -38,6 +38,16 @@ export const verifyProfessorPinViaApi = async (professorId: string, pin: string)
   return response.ok;
 };
 
+export const updateProfessorNameViaApi = async (professorId: string, newName: string): Promise<boolean> => {
+  const response = await fetch(`${API_BASE_URL}/api/professors/${encodeURIComponent(professorId)}/name`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newName }),
+  });
+
+  return response.ok;
+};
+
 export const updateProfessorPinViaApi = async (professorId: string, newPin: string): Promise<boolean> => {
   const response = await fetch(`${API_BASE_URL}/api/professors/${encodeURIComponent(professorId)}/pin`, {
     method: 'PATCH',

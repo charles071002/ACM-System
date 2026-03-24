@@ -56,6 +56,31 @@ router.post('/verify-pin', async (req, res) => {
   }
 });
 
+router.patch('/:id/name', async (req, res) => {
+  const { id } = req.params;
+  const { newName } = req.body || {};
+
+  if (!id || typeof newName !== 'string' || !newName.trim()) {
+    return res.status(400).json({ ok: false, message: 'Professor id and new name are required' });
+  }
+
+  try {
+    const [result] = await pool.query(
+      `UPDATE ${tableName} SET ${nameColumn} = ? WHERE id = ?`,
+      [newName.trim(), id]
+    );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({ ok: false, message: 'Professor not found' });
+    }
+
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('Failed to update professor name:', error);
+    return res.status(500).json({ ok: false, message: 'Failed to update professor name' });
+  }
+});
+
 router.patch('/:id/pin', async (req, res) => {
   const { id } = req.params;
   const { newPin } = req.body || {};

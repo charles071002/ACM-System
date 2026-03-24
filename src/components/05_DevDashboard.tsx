@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Professor } from '../types';
-import { PROFESSORS } from '../constants';
 import { StorageService } from '../lib/storage';
 import ChangePinModal from './10_ChangePinModal';
+import { updateProfessorNameViaApi } from '../lib/api';
 import {
   ChevronLeft,
   Shield,
@@ -41,11 +41,22 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
     setOpenMenuId(null);
   };
 
-  const handleSaveName = (id: string) => {
-    if (!tempName.trim()) return;
-    const updated = StorageService.updateProfessorName(PROFESSORS, id, tempName);
-    setProfs(updated);
-    setEditingId(null);
+  const handleSaveName = async (id: string) => {
+    const trimmedName = tempName.trim();
+    if (!trimmedName) return;
+
+    try {
+      const updated = await updateProfessorNameViaApi(id, trimmedName);
+      if (!updated) {
+        alert('FAILED TO UPDATE PROFESSOR NAME IN DATABASE');
+        return;
+      }
+
+      setProfs((prev) => prev.map((prof) => (prof.id === id ? { ...prof, name: trimmedName } : prof)));
+      setEditingId(null);
+    } catch {
+      alert('DATABASE CONNECTION FAILED');
+    }
   };
 
   const openChangePin = (id: string, name: string) => {
@@ -136,7 +147,9 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                             className="flex-1 bg-white border-2 border-blue-200 rounded-xl px-4 py-2 text-xs font-bold text-blue-900 focus:outline-none focus:border-yellow-500 min-w-[120px]"
                           />
                           <button
-                            onClick={() => handleSaveName(prof.id)}
+                            onClick={() => {
+                              void handleSaveName(prof.id);
+                            }}
                             className="p-2 bg-green-500 text-white rounded-xl hover:bg-green-600 shadow-md transition-all active:scale-90"
                           >
                             <Save size={18} />

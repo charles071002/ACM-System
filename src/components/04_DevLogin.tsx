@@ -14,17 +14,14 @@ const DevLogin: React.FC<DevLoginProps> = ({ onSuccess, onBack }) => {
   /**
    * Validates the credentials based on strict requirements:
    * 1. Username matches "DEVELOPER" (case-insensitive check for input flexibility)
-   * 2. Password is alphanumeric and exactly 6 characters
+   * 2. Password accepts alphanumeric input with no fixed length limit
    */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Strict alphanumeric and length validation for password
-    const isPasswordValidFormat = /^[a-zA-Z0-9]{6}$/.test(password);
-
     // Authentication check: username is case-insensitive for input, target is 'DEVELOPER'
     // Password target is '111111'
-    if (isPasswordValidFormat && username.toUpperCase() === 'DEVELOPER' && password === '111111') {
+    if (username.toUpperCase() === 'DEVELOPER' && password === '111111') {
       onSuccess();
     } else {
       setError(true);
@@ -93,7 +90,6 @@ const DevLogin: React.FC<DevLoginProps> = ({ onSuccess, onBack }) => {
                 </label>
                 <input
                   type="password"
-                  maxLength={6}
                   value={password}
                   onChange={handlePasswordChange}
                   placeholder="••••••"
@@ -109,9 +105,9 @@ const DevLogin: React.FC<DevLoginProps> = ({ onSuccess, onBack }) => {
 
               <button
                 type="submit"
-                disabled={password.length !== 6}
+                disabled={password.length === 0}
                 className={`w-full py-5 rounded-3xl font-black text-sm uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3 ${
-                  password.length === 6
+                  password.length > 0
                     ? 'bg-blue-900 text-yellow-400 active:scale-95 border-b-4 border-yellow-600'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed border-b-4 border-gray-300'
                 }`}
