@@ -281,7 +281,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mt-4 mb-4 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mt-4 mb-4 w-full">
             <div className="flex flex-col gap-0 min-w-0 flex-1 px-1">
               <h2 className="text-[25px] font-black text-blue-900 tracking-wide uppercase">Professor dashboard</h2>
               <div className="flex flex-col gap-0">
@@ -322,18 +322,20 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
               </div>
             </div>
 
-            <div className="bg-blue-900 rounded-2xl sm:rounded-[1.5rem] p-5 sm:p-6 w-56 sm:w-60 max-w-[min(100%,15rem)] text-white shadow-xl relative overflow-hidden flex flex-col items-center justify-center border-[3px] border-yellow-500 shrink-0 self-start mt-5 sm:mt-8 -ml-6 sm:-ml-9 min-h-[150px] sm:min-h-[170px]">
-              <div className="flex items-center justify-between w-full gap-2 mb-1.5">
-                <Users className="text-yellow-400 shrink-0" size={18} />
-                <span className="text-[7px] sm:text-[8px] font-black uppercase bg-yellow-500 text-blue-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full animate-pulse text-center leading-tight">
-                  Live Monitoring
-                </span>
+            <div className="w-full sm:flex-1 flex justify-center sm:justify-center mt-3 sm:mt-10">
+              <div className="bg-blue-900 rounded-2xl sm:rounded-[1.5rem] p-5 sm:p-6 w-56 sm:w-60 max-w-[min(100%,15rem)] text-white shadow-xl relative overflow-hidden flex flex-col items-center justify-center border-[3px] border-yellow-500 shrink-0 min-h-[150px] sm:min-h-[170px]">
+                <div className="flex items-center justify-between w-full gap-2 mb-1.5">
+                  <Users className="text-yellow-400 shrink-0" size={18} />
+                  <span className="text-[7px] sm:text-[8px] font-black uppercase bg-yellow-500 text-blue-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full animate-pulse text-center leading-tight">
+                    Live Monitoring
+                  </span>
+                </div>
+                <div className="text-4xl sm:text-5xl font-black text-yellow-400 drop-shadow-md tracking-tighter leading-none">{submissionCount}</div>
+                <p className="text-[7px] sm:text-[8px] font-black uppercase tracking-[0.12em] text-white/90 mt-1.5 text-center">
+                  Submissions Detected
+                </p>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-500 opacity-90"></div>
               </div>
-              <div className="text-4xl sm:text-5xl font-black text-yellow-400 drop-shadow-md tracking-tighter leading-none">{submissionCount}</div>
-              <p className="text-[7px] sm:text-[8px] font-black uppercase tracking-[0.12em] text-white/90 mt-1.5 text-center">
-                Submissions Detected
-              </p>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-500 opacity-90"></div>
             </div>
           </div>
 
