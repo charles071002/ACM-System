@@ -7,8 +7,6 @@ import ManualModal from '../screens/06_modals/ManualModal';
 import PinModal from '../screens/06_modals/PinModal';
 import DevLogin from '../screens/04_dev-login/DevLoginScreen';
 import DevDashboard from '../screens/05_dev-dashboard/DevDashboardScreen';
-import { PROFESSORS } from '../constants';
-import { StorageService } from '../lib/storage';
 import { fetchProfessorsFromApi } from '../lib/api';
 
 const App: React.FC = () => {
@@ -82,7 +80,7 @@ const App: React.FC = () => {
 
   const initialPath = typeof window !== 'undefined' ? normalizePath(window.location.pathname) : '/';
   const [currentPage, setCurrentPage] = useState<AppState>(pathToState(initialPath));
-  const [professors, setProfessors] = useState<Professor[]>(() => StorageService.getProfessors(PROFESSORS));
+  const [professors, setProfessors] = useState<Professor[]>([]);
   const [selectedProfessor, setSelectedProfessor] = useState<Professor | null>(null);
   const [isManualOpen, setIsManualOpen] = useState(false);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
@@ -101,23 +99,20 @@ const App: React.FC = () => {
   const replaceUrl = (path: string) => window.history.replaceState({}, '', path);
   const pushUrl = (path: string) => window.history.pushState({}, '', path);
 
-  // Prefer MySQL-backed professors list, fallback to local data
+  // Strict DB-only source of truth for professor registry.
   useEffect(() => {
     let isMounted = true;
 
     const loadProfessors = async () => {
       try {
         const remoteProfessors = await fetchProfessorsFromApi();
-        if (isMounted && remoteProfessors.length > 0) {
+        if (isMounted) {
           setProfessors(remoteProfessors);
-          return;
         }
       } catch {
-        // Fallback keeps app usable when API is offline.
-      }
-
-      if (isMounted) {
-        setProfessors(StorageService.getProfessors(PROFESSORS));
+        if (isMounted) {
+          setProfessors([]);
+        }
       }
     };
 

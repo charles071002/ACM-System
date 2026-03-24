@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Professor } from '../types';
-import { INITIAL_PIN } from '../constants';
-import { StorageService } from '../lib/storage';
 import { verifyProfessorPinViaApi } from '../lib/api';
 import { X, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -18,20 +16,16 @@ const PinModal: React.FC<PinModalProps> = ({ professor, onVerify, onClose }) => 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let isValid = false;
-
     try {
-      isValid = await verifyProfessorPinViaApi(professor.id, pin);
+      const isValid = await verifyProfessorPinViaApi(professor.id, pin);
+      if (isValid) {
+        setError(false);
+        onVerify();
+      } else {
+        setError(true);
+        setPin('');
+      }
     } catch {
-      // Fallback keeps PIN verification functional if API is unavailable.
-      const storedPin = StorageService.getPin(professor.id, INITIAL_PIN);
-      isValid = pin === storedPin;
-    }
-
-    if (isValid) {
-      setError(false);
-      onVerify();
-    } else {
       setError(true);
       setPin('');
     }
@@ -65,10 +59,13 @@ const PinModal: React.FC<PinModalProps> = ({ professor, onVerify, onClose }) => 
               <input
                 type="password"
                 maxLength={6}
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={pin}
                 autoFocus
                 onChange={(e) => {
-                  setPin(e.target.value);
+                  const digitsOnly = e.target.value.replace(/\D/g, '');
+                  setPin(digitsOnly);
                   setError(false);
                 }}
                 placeholder="••••••"

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { StorageService } from '../lib/storage';
 import { updateProfessorPinViaApi } from '../lib/api';
 import { X, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -37,8 +36,6 @@ const ChangePinModal: React.FC<ChangePinModalProps> = ({ profId, onClose, onSucc
       return;
     }
 
-    // Keep local cache aligned with backend update for fallback mode.
-    StorageService.setPin(profId, newPin);
     onSuccess();
   };
 
@@ -69,10 +66,13 @@ const ChangePinModal: React.FC<ChangePinModalProps> = ({ profId, onClose, onSucc
               <input
                 type="password"
                 maxLength={6}
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={newPin}
                 autoFocus
                 onChange={(e) => {
-                  setNewPin(e.target.value);
+                  const digitsOnly = e.target.value.replace(/\D/g, '');
+                  setNewPin(digitsOnly);
                   setError(null);
                 }}
                 placeholder="••••••"
@@ -87,9 +87,12 @@ const ChangePinModal: React.FC<ChangePinModalProps> = ({ profId, onClose, onSucc
               <input
                 type="password"
                 maxLength={6}
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={confirmPin}
                 onChange={(e) => {
-                  setConfirmPin(e.target.value);
+                  const digitsOnly = e.target.value.replace(/\D/g, '');
+                  setConfirmPin(digitsOnly);
                   setError(null);
                 }}
                 placeholder="••••••"
