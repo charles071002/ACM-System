@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Professor } from '../types';
-import { PROFESSORS, INITIAL_PIN } from '../constants';
+import { PROFESSORS } from '../constants';
 import { StorageService } from '../lib/storage';
+import ChangePinModal from './10_ChangePinModal';
 import {
   ChevronLeft,
   Shield,
@@ -10,8 +11,6 @@ import {
   Save,
   X,
   GraduationCap,
-  AlertTriangle,
-  Check,
   Menu as MenuIcon,
   QrCode,
   Box,
@@ -29,8 +28,8 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // State for the reset confirmation modal
-  const [resetConfirmId, setResetConfirmId] = useState<{ id: string; name: string } | null>(null);
+  // State for shared Change PIN modal
+  const [changePinTarget, setChangePinTarget] = useState<{ id: string; name: string } | null>(null);
 
   // State for compartment QR editing
   const [editingCompartment, setEditingCompartment] = useState<{ id: string; name: string; data: string } | null>(null);
@@ -49,17 +48,9 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
     setEditingId(null);
   };
 
-  const initiateReset = (id: string, name: string) => {
-    setResetConfirmId({ id, name });
+  const openChangePin = (id: string, name: string) => {
+    setChangePinTarget({ id, name });
     setOpenMenuId(null);
-  };
-
-  const confirmResetPin = () => {
-    if (resetConfirmId) {
-      StorageService.resetPin(resetConfirmId.id, INITIAL_PIN);
-      alert(`PIN for ${resetConfirmId.name} has been reset to default.`);
-      setResetConfirmId(null);
-    }
   };
 
   const handleStartEditCompartment = (prof: Professor) => {
@@ -188,11 +179,11 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                               <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">Edit Name</span>
                             </button>
                             <button
-                              onClick={() => initiateReset(prof.id, prof.name)}
+                              onClick={() => openChangePin(prof.id, prof.name)}
                               className="w-full px-4 py-3.5 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
                             >
-                              <RotateCcw size={16} className="text-red-500" />
-                              <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Reset PIN Code</span>
+                              <RotateCcw size={16} className="text-blue-900" />
+                              <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">Change PIN Code</span>
                             </button>
                             <button
                               onClick={() => handleStartEditCompartment(prof)}
@@ -272,46 +263,15 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
         </div>
       )}
 
-      {/* Confirmation Modal for Reset PIN */}
-      {resetConfirmId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500">
-            <div className="bg-red-600 p-8 flex flex-col items-center text-white text-center relative">
-              <button
-                onClick={() => setResetConfirmId(null)}
-                className="absolute top-4 right-4 text-white/70 hover:text-white"
-              >
-                <X size={24} />
-              </button>
-
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg">
-                <AlertTriangle size={32} className="text-red-600" />
-              </div>
-
-              <h3 className="text-xl font-black tracking-tight uppercase leading-none">Confirm Reset</h3>
-              <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest mt-2">{resetConfirmId.name}</p>
-            </div>
-
-            <div className="p-8 text-center">
-              <p className="text-blue-900 font-bold text-sm leading-relaxed mb-8">This action will reset the PIN</p>
-
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={() => setResetConfirmId(null)}
-                  className="py-4 bg-gray-100 text-gray-600 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmResetPin}
-                  className="py-4 bg-red-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 border-b-4 border-red-800 flex items-center justify-center gap-2"
-                >
-                  <Check size={16} /> Confirm
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {changePinTarget && (
+        <ChangePinModal
+          profId={changePinTarget.id}
+          onClose={() => setChangePinTarget(null)}
+          onSuccess={() => {
+            alert(`PIN CODE UPDATED SUCCESSFULLY FOR ${changePinTarget.name.toUpperCase()}`);
+            setChangePinTarget(null);
+          }}
+        />
       )}
     </div>
   );
