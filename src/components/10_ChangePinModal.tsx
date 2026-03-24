@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StorageService } from '../lib/storage';
+import { updateProfessorPinViaApi } from '../lib/api';
 import { X, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface ChangePinModalProps {
@@ -13,10 +14,10 @@ const ChangePinModal: React.FC<ChangePinModalProps> = ({ profId, onClose, onSucc
   const [confirmPin, setConfirmPin] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPin.length < 6) {
-      setError('PIN MUST BE 6 DIGITS');
+    if (!/^\d{6}$/.test(newPin)) {
+      setError('PIN MUST BE EXACTLY 6 DIGITS');
       return;
     }
     if (newPin !== confirmPin) {
@@ -25,6 +26,18 @@ const ChangePinModal: React.FC<ChangePinModalProps> = ({ profId, onClose, onSucc
       return;
     }
 
+    try {
+      const updated = await updateProfessorPinViaApi(profId, newPin);
+      if (!updated) {
+        setError('FAILED TO UPDATE PIN IN DATABASE');
+        return;
+      }
+    } catch {
+      setError('DATABASE CONNECTION FAILED');
+      return;
+    }
+
+    // Keep local cache aligned with backend update for fallback mode.
     StorageService.setPin(profId, newPin);
     onSuccess();
   };

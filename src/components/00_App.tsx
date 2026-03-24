@@ -9,6 +9,7 @@ import DevLogin from '../screens/04_dev-login/DevLoginScreen';
 import DevDashboard from '../screens/05_dev-dashboard/DevDashboardScreen';
 import { PROFESSORS } from '../constants';
 import { StorageService } from '../lib/storage';
+import { fetchProfessorsFromApi } from '../lib/api';
 
 const App: React.FC = () => {
   const SELECTED_PROFESSOR_KEY = 'acm_selected_professor_id';
@@ -100,9 +101,30 @@ const App: React.FC = () => {
   const replaceUrl = (path: string) => window.history.replaceState({}, '', path);
   const pushUrl = (path: string) => window.history.pushState({}, '', path);
 
-  // Sync state if professors are updated by dev
+  // Prefer MySQL-backed professors list, fallback to local data
   useEffect(() => {
-    setProfessors(StorageService.getProfessors(PROFESSORS));
+    let isMounted = true;
+
+    const loadProfessors = async () => {
+      try {
+        const remoteProfessors = await fetchProfessorsFromApi();
+        if (isMounted && remoteProfessors.length > 0) {
+          setProfessors(remoteProfessors);
+          return;
+        }
+      } catch {
+        // Fallback keeps app usable when API is offline.
+      }
+
+      if (isMounted) {
+        setProfessors(StorageService.getProfessors(PROFESSORS));
+      }
+    };
+
+    loadProfessors();
+    return () => {
+      isMounted = false;
+    };
   }, [currentPage]);
 
   // Keep currentPage in sync with browser URL

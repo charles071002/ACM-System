@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Professor } from '../types';
 import { INITIAL_PIN } from '../constants';
 import { StorageService } from '../lib/storage';
+import { verifyProfessorPinViaApi } from '../lib/api';
 import { X, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface PinModalProps {
@@ -14,10 +15,20 @@ const PinModal: React.FC<PinModalProps> = ({ professor, onVerify, onClose }) => 
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const storedPin = StorageService.getPin(professor.id, INITIAL_PIN);
-    if (pin === storedPin) {
+
+    let isValid = false;
+
+    try {
+      isValid = await verifyProfessorPinViaApi(professor.id, pin);
+    } catch {
+      // Fallback keeps PIN verification functional if API is unavailable.
+      const storedPin = StorageService.getPin(professor.id, INITIAL_PIN);
+      isValid = pin === storedPin;
+    }
+
+    if (isValid) {
       setError(false);
       onVerify();
     } else {
