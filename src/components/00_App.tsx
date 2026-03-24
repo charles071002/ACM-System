@@ -21,8 +21,30 @@ const App: React.FC = () => {
     return trimmed.length ? trimmed : '/';
   };
 
+  const slugify = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+
+  const getProfessorSlug = (prof: Professor) => {
+    const parts = prof.name.trim().split(/\s+/);
+    const lastName = parts.length ? parts[parts.length - 1] : prof.name;
+    return slugify(lastName);
+  };
+
+  const extractDashboardSlug = (p: string): string | null => {
+    const path = normalizePath(p);
+    const match = path.match(/^\/professor\/dashboard\/([^/]+)$/);
+    return match ? decodeURIComponent(match[1]) : null;
+  };
+
   const pathToState = (p: string): AppState => {
     const path = normalizePath(p);
+    if (/^\/professor\/dashboard\/[^/]+$/.test(path)) {
+      return AppState.DASHBOARD;
+    }
     switch (path) {
       case '/':
         return AppState.LANDING;
@@ -39,13 +61,16 @@ const App: React.FC = () => {
     }
   };
 
-  const stateToPath = (s: AppState): string => {
+  const stateToPath = (s: AppState, prof?: Professor | null): string => {
     switch (s) {
       case AppState.LANDING:
         return '/';
       case AppState.PROF_SELECT:
         return '/professor';
       case AppState.DASHBOARD:
+        if (prof) {
+          return `/professor/dashboard/${encodeURIComponent(getProfessorSlug(prof))}`;
+        }
         return '/professor/dashboard';
       case AppState.DEV_LOGIN:
         return '/developer';
@@ -87,9 +112,19 @@ const App: React.FC = () => {
       let resolvedState = nextState;
 
       if (nextState === AppState.DASHBOARD) {
-        const prof = selectedProfessorFromStorage;
+        const slugFromPath = extractDashboardSlug(window.location.pathname);
+        const profFromPath = slugFromPath
+          ? professors.find((p) => getProfessorSlug(p) === slugFromPath) || null
+          : null;
+        const prof = profFromPath || selectedProfessorFromStorage;
+
         if (prof && isProfessorAuthenticated()) {
           setSelectedProfessor(prof);
+          localStorage.setItem(SELECTED_PROFESSOR_KEY, prof.id);
+          const canonicalPath = stateToPath(AppState.DASHBOARD, prof);
+          if (normalizePath(window.location.pathname) !== canonicalPath) {
+            replaceUrl(canonicalPath);
+          }
         } else {
           // Guard professor dashboard: requires professor context + verified PIN session
           setSelectedProfessor(null);
@@ -118,8 +153,9 @@ const App: React.FC = () => {
     return () => window.removeEventListener('popstate', syncFromUrl);
   }, [selectedProfessorFromStorage]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const navigate = (nextState: AppState) => {
-    const path = stateToPath(nextState);
+  const navigate = (nextState: AppState, prof?: Professor | null) => {
+    const targetProf = prof ?? selectedProfessor;
+    const path = stateToPath(nextState, targetProf);
     pushUrl(path);
     setCurrentPage(nextState);
   };
@@ -137,7 +173,7 @@ const App: React.FC = () => {
   const handlePinVerified = () => {
     setProfessorAuthenticated(true);
     setIsPinModalOpen(false);
-    navigate(AppState.DASHBOARD);
+    navigate(AppState.DASHBOARD, selectedProfessor);
   };
 
   const handleDevLoginSuccess = () => {
