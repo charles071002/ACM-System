@@ -12,6 +12,8 @@ import { StorageService } from '../lib/storage';
 
 const App: React.FC = () => {
   const SELECTED_PROFESSOR_KEY = 'acm_selected_professor_id';
+  const PROFESSOR_AUTH_KEY = 'acm_professor_authenticated';
+  const DEV_AUTH_KEY = 'acm_developer_authenticated';
 
   const normalizePath = (p: string) => {
     const withSlash = p.startsWith('/') ? p : `/${p}`;
@@ -65,6 +67,11 @@ const App: React.FC = () => {
     return professors.find((p) => p.id === id) || null;
   }, [professors]);
 
+  const isProfessorAuthenticated = () => localStorage.getItem(PROFESSOR_AUTH_KEY) === 'true';
+  const setProfessorAuthenticated = (value: boolean) => localStorage.setItem(PROFESSOR_AUTH_KEY, value ? 'true' : 'false');
+  const isDeveloperAuthenticated = () => localStorage.getItem(DEV_AUTH_KEY) === 'true';
+  const setDeveloperAuthenticated = (value: boolean) => localStorage.setItem(DEV_AUTH_KEY, value ? 'true' : 'false');
+
   const replaceUrl = (path: string) => window.history.replaceState({}, '', path);
   const pushUrl = (path: string) => window.history.pushState({}, '', path);
 
@@ -77,21 +84,30 @@ const App: React.FC = () => {
   useEffect(() => {
     const syncFromUrl = () => {
       const nextState = pathToState(window.location.pathname);
-      setCurrentPage(nextState);
+      let resolvedState = nextState;
 
       if (nextState === AppState.DASHBOARD) {
         const prof = selectedProfessorFromStorage;
-        if (prof) {
+        if (prof && isProfessorAuthenticated()) {
           setSelectedProfessor(prof);
         } else {
-          // No professor selected -> redirect to professor selection
+          // Guard professor dashboard: requires professor context + verified PIN session
           setSelectedProfessor(null);
+          setProfessorAuthenticated(false);
+          resolvedState = AppState.PROF_SELECT;
           replaceUrl(stateToPath(AppState.PROF_SELECT));
-          setCurrentPage(AppState.PROF_SELECT);
         }
       }
 
-      if (nextState !== AppState.DASHBOARD) {
+      if (nextState === AppState.DEV_DASHBOARD && !isDeveloperAuthenticated()) {
+        // Guard developer dashboard: requires successful developer login
+        resolvedState = AppState.DEV_LOGIN;
+        replaceUrl(stateToPath(AppState.DEV_LOGIN));
+      }
+
+      setCurrentPage(resolvedState);
+
+      if (resolvedState !== AppState.DASHBOARD) {
         setSelectedProfessor(null);
         setIsPinModalOpen(false);
       }
@@ -113,22 +129,30 @@ const App: React.FC = () => {
 
   const handleSelectProfessor = (prof: Professor) => {
     localStorage.setItem(SELECTED_PROFESSOR_KEY, prof.id);
+    setProfessorAuthenticated(false);
     setSelectedProfessor(prof);
     setIsPinModalOpen(true);
   };
 
   const handlePinVerified = () => {
+    setProfessorAuthenticated(true);
     setIsPinModalOpen(false);
     navigate(AppState.DASHBOARD);
   };
 
-  const handleDevLoginSuccess = () => navigate(AppState.DEV_DASHBOARD);
+  const handleDevLoginSuccess = () => {
+    setDeveloperAuthenticated(true);
+    navigate(AppState.DEV_DASHBOARD);
+  };
 
   const goBackToLanding = () => {
+    setDeveloperAuthenticated(false);
+    setProfessorAuthenticated(false);
     navigate(AppState.LANDING);
   };
 
   const goBackToSelect = () => {
+    setProfessorAuthenticated(false);
     navigate(AppState.PROF_SELECT);
   };
 
