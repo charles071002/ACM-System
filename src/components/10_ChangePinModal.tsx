@@ -41,11 +41,11 @@ const ChangePinModal: React.FC<ChangePinModalProps> = ({ profId, onClose, onSucc
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500">
-        <div className="bg-blue-900 p-8 flex flex-col items-center text-white text-center relative">
+      <div className="bg-white rounded-[2.5rem] w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-up border-4 border-yellow-500">
+        <div className="bg-blue-900 p-6 sm:p-8 flex flex-col items-center text-white text-center relative">
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 text-yellow-500/70 hover:text-yellow-400"
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 text-yellow-500/70 hover:text-yellow-400"
           >
             <X size={28} />
           </button>
@@ -57,7 +57,7 @@ const ChangePinModal: React.FC<ChangePinModalProps> = ({ profId, onClose, onSucc
           <h3 className="text-xl font-black tracking-tight text-yellow-400 uppercase">Update Pin Code</h3>
         </div>
 
-        <div className="p-8">
+        <div className="p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div className="space-y-2">
               <label className="block text-[10px] font-black text-blue-900 uppercase tracking-widest text-center">

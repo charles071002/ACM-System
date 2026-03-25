@@ -33,24 +33,24 @@ const PinModal: React.FC<PinModalProps> = ({ professor, onVerify, onClose }) => 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500">
-        <div className="bg-blue-900 p-10 flex flex-col items-center text-white text-center relative">
+      <div className="bg-white rounded-[2.5rem] w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-up border-4 border-yellow-500">
+        <div className="bg-blue-900 p-6 sm:p-10 flex flex-col items-center text-white text-center relative">
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 text-yellow-500/70 hover:text-yellow-400"
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 text-yellow-500/70 hover:text-yellow-400"
           >
             <X size={28} />
           </button>
 
-          <div className="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mb-6 shadow-lg border-4 border-white/20">
-            <Lock size={36} className="text-blue-900" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-yellow-500 rounded-full flex items-center justify-center mb-4 sm:mb-6 shadow-lg border-4 border-white/20">
+            <Lock size={32} className="text-blue-900" />
           </div>
 
-          <h3 className="text-2xl font-black tracking-tight text-yellow-400">SECURE ACCESS</h3>
-          <p className="text-sm font-bold opacity-80 mt-1 uppercase tracking-widest">{professor.name}</p>
+          <h3 className="text-xl sm:text-2xl font-black tracking-tight text-yellow-400">SECURE ACCESS</h3>
+          <p className="text-[11px] sm:text-sm font-bold opacity-80 mt-1 uppercase tracking-widest">{professor.name}</p>
         </div>
 
-        <div className="p-10">
+        <div className="p-6 sm:p-10">
           <form onSubmit={handleSubmit} className="flex flex-col gap-8">
             <div className="space-y-4">
               <label className="block text-xs font-black text-blue-900 uppercase tracking-widest text-center">
@@ -69,7 +69,7 @@ const PinModal: React.FC<PinModalProps> = ({ professor, onVerify, onClose }) => 
                   setError(false);
                 }}
                 placeholder="••••••"
-                className={`w-full bg-gray-50 border-4 ${error ? 'border-red-500' : 'border-blue-50'} rounded-3xl py-4 text-center text-3xl font-black tracking-[0.7em] text-blue-900 focus:outline-none focus:border-yellow-500 transition-all shadow-inner`}
+                className={`w-full bg-gray-50 border-4 ${error ? 'border-red-500' : 'border-blue-50'} rounded-3xl py-4 text-center text-2xl sm:text-3xl font-black tracking-[0.7em] text-blue-900 focus:outline-none focus:border-yellow-500 transition-all shadow-inner`}
               />
               {error && (
                 <p className="text-red-500 text-xs mt-2 flex items-center justify-center gap-2 font-black">
@@ -82,7 +82,7 @@ const PinModal: React.FC<PinModalProps> = ({ professor, onVerify, onClose }) => 
             <button
               type="submit"
               disabled={pin.length < 6}
-              className={`w-full py-5 rounded-3xl font-black text-lg uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3 ${pin.length < 6 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-900 text-yellow-400 hover:bg-blue-800 active:scale-95 border-b-4 border-yellow-600'}`}
+              className={`w-full py-5 rounded-3xl font-black text-base sm:text-lg uppercase tracking-widest shadow-xl transition-all flex items-center justify-center gap-3 ${pin.length < 6 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-900 text-yellow-400 hover:bg-blue-800 active:scale-95 border-b-4 border-yellow-600'}`}
             >
               <CheckCircle2 size={24} />
               Verify
