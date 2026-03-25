@@ -5,6 +5,7 @@ const router = express.Router();
 const tableName = process.env.DB_PROFESSORS_TABLE || 'professors';
 const pinColumn = process.env.DB_PIN_COLUMN || 'pincode';
 const nameColumn = process.env.DB_NAME_COLUMN || 'professor';
+const compartmentColumn = process.env.DB_COMPARTMENT_COLUMN || 'compartment_qr';
 
 router.get('/', async (_req, res) => {
   try {
@@ -107,6 +108,33 @@ router.patch('/:id/pin', async (req, res) => {
   } catch (error) {
     console.error('Failed to update pin:', error);
     return res.status(500).json({ ok: false, message: 'Failed to update pin' });
+  }
+});
+
+router.patch('/:id/compartment-qr', async (req, res) => {
+  const { id } = req.params;
+  const { compartmentQr } = req.body || {};
+
+  if (!id || typeof compartmentQr !== 'string') {
+    return res.status(400).json({ ok: false, message: 'Professor id and compartmentQr are required' });
+  }
+
+  const nextValue = compartmentQr.trim();
+
+  try {
+    const [result] = await pool.query(
+      `UPDATE ${tableName} SET ${compartmentColumn} = ? WHERE id = ?`,
+      [nextValue, id]
+    );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({ ok: false, message: 'Professor not found' });
+    }
+
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('Failed to update compartment QR:', error);
+    return res.status(500).json({ ok: false, message: 'Failed to update compartment QR' });
   }
 });
 

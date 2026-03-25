@@ -58,6 +58,16 @@ export const updateProfessorPinViaApi = async (professorId: string, newPin: stri
   return response.ok;
 };
 
+export const updateProfessorCompartmentQrViaApi = async (professorId: string, compartmentQr: string): Promise<boolean> => {
+  const response = await fetch(`${API_BASE_URL}/api/professors/${encodeURIComponent(professorId)}/compartment-qr`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ compartmentQr }),
+  });
+
+  return response.ok;
+};
+
 export const devLoginViaApi = async (username: string, password: string): Promise<boolean> => {
   const response = await fetch(`${API_BASE_URL}/api/dev/login`, {
     method: 'POST',

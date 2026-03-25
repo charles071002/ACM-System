@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Professor } from '../types';
 import { StorageService } from '../lib/storage';
 import ChangePinModal from './10_ChangePinModal';
-import { updateProfessorNameViaApi } from '../lib/api';
+import { updateProfessorCompartmentQrViaApi, updateProfessorNameViaApi } from '../lib/api';
 import ChangeDevPasswordModal from './11_ChangeDevPasswordModal';
 import {
   ChevronLeft,
@@ -75,11 +75,20 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
     setOpenMenuId(null);
   };
 
-  const handleSaveCompartment = () => {
+  const handleSaveCompartment = async () => {
     if (editingCompartment) {
-      StorageService.setCompartmentData(editingCompartment.id, tempCompartmentData);
-      setEditingCompartment(null);
-      alert('Compartment QR Data Updated.');
+      try {
+        const ok = await updateProfessorCompartmentQrViaApi(editingCompartment.id, tempCompartmentData);
+        if (!ok) {
+          alert('FAILED TO UPDATE COMPARTMENT QR IN DATABASE');
+          return;
+        }
+        StorageService.setCompartmentData(editingCompartment.id, tempCompartmentData);
+        setEditingCompartment(null);
+        alert('Compartment QR Data Updated.');
+      } catch {
+        alert('DATABASE CONNECTION FAILED');
+      }
     }
   };
 

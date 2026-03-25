@@ -218,7 +218,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
                 <h1 style="color:#1e3a8a; margin:0; font-size:2.5rem; font-weight:900;">ACM SYSTEM</h1>
                 <p style="color:#ca8a04; font-weight:bold; letter-spacing:0.1em; margin-bottom:30px; text-transform:uppercase;">COMPARTMENT IDENTITY</p>
                 <img src="${compartmentQrUrl}" style="width:300px; height:300px; padding:10px; border:2px solid #e5e7eb; border-radius:20px;" />
-                <p style="margin-top:30px; font-size:1.2rem; font-weight:bold; color:#1e3a8a;">Professor: ${professor.name}</p>
+                <p style="margin-top:30px; font-size:1.2rem; font-weight:bold; color:#1e3a8a;">${professor.name}</p>
                 <p style="margin-top:10px; font-size:0.9rem; font-weight:bold; color:#1e3a8a;">RIZAL TECHNOLOGICAL UNIVERSITY</p>
                 <p style="font-size:0.7rem; color:#9ca3af; margin-top:5px;">Generated on ${new Date().toLocaleDateString()}</p>
               </div>
@@ -432,7 +432,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
               </div>
               <div className="text-center">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Assigned to</p>
-                <p className="text-lg font-black text-blue-900 uppercase">Professor: {professor.name}</p>
+                <p className="text-lg font-black text-blue-900 uppercase">{professor.name}</p>
               </div>
 
               <div className="flex flex-col gap-2 w-full">
