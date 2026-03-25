@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppState, Professor } from '../types';
 import LandingPage from '../screens/01_landing/LandingScreen';
 import ProfessorSelect from '../screens/02_professor-select/ProfessorSelectScreen';
@@ -10,10 +10,6 @@ import DevDashboard from '../screens/05_dev-dashboard/DevDashboardScreen';
 import { fetchProfessorsFromApi } from '../lib/api';
 
 const App: React.FC = () => {
-  const SELECTED_PROFESSOR_KEY = 'acm_selected_professor_id';
-  const PROFESSOR_AUTH_KEY = 'acm_professor_authenticated';
-  const DEV_AUTH_KEY = 'acm_developer_authenticated';
-
   const normalizePath = (p: string) => {
     const withSlash = p.startsWith('/') ? p : `/${p}`;
     const trimmed = withSlash.replace(/\/+$/, '');
@@ -84,17 +80,8 @@ const App: React.FC = () => {
   const [selectedProfessor, setSelectedProfessor] = useState<Professor | null>(null);
   const [isManualOpen, setIsManualOpen] = useState(false);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-
-  const selectedProfessorFromStorage = useMemo(() => {
-    const id = localStorage.getItem(SELECTED_PROFESSOR_KEY);
-    if (!id) return null;
-    return professors.find((p) => p.id === id) || null;
-  }, [professors]);
-
-  const isProfessorAuthenticated = () => localStorage.getItem(PROFESSOR_AUTH_KEY) === 'true';
-  const setProfessorAuthenticated = (value: boolean) => localStorage.setItem(PROFESSOR_AUTH_KEY, value ? 'true' : 'false');
-  const isDeveloperAuthenticated = () => localStorage.getItem(DEV_AUTH_KEY) === 'true';
-  const setDeveloperAuthenticated = (value: boolean) => localStorage.setItem(DEV_AUTH_KEY, value ? 'true' : 'false');
+  const [isProfessorAuthenticated, setIsProfessorAuthenticated] = useState(false);
+  const [isDeveloperAuthenticated, setIsDeveloperAuthenticated] = useState(false);
 
   const replaceUrl = (path: string) => window.history.replaceState({}, '', path);
   const pushUrl = (path: string) => window.history.pushState({}, '', path);
@@ -133,11 +120,10 @@ const App: React.FC = () => {
         const profFromPath = slugFromPath
           ? professors.find((p) => getProfessorSlug(p) === slugFromPath) || null
           : null;
-        const prof = profFromPath || selectedProfessorFromStorage;
+        const prof = profFromPath || selectedProfessor;
 
-        if (prof && isProfessorAuthenticated()) {
+        if (prof && isProfessorAuthenticated) {
           setSelectedProfessor(prof);
-          localStorage.setItem(SELECTED_PROFESSOR_KEY, prof.id);
           const canonicalPath = stateToPath(AppState.DASHBOARD, prof);
           if (normalizePath(window.location.pathname) !== canonicalPath) {
             replaceUrl(canonicalPath);
@@ -145,13 +131,13 @@ const App: React.FC = () => {
         } else {
           // Guard professor dashboard: requires professor context + verified PIN session
           setSelectedProfessor(null);
-          setProfessorAuthenticated(false);
+          setIsProfessorAuthenticated(false);
           resolvedState = AppState.PROF_SELECT;
           replaceUrl(stateToPath(AppState.PROF_SELECT));
         }
       }
 
-      if (nextState === AppState.DEV_DASHBOARD && !isDeveloperAuthenticated()) {
+      if (nextState === AppState.DEV_DASHBOARD && !isDeveloperAuthenticated) {
         // Guard developer dashboard: requires successful developer login
         resolvedState = AppState.DEV_LOGIN;
         replaceUrl(stateToPath(AppState.DEV_LOGIN));
@@ -159,7 +145,9 @@ const App: React.FC = () => {
 
       setCurrentPage(resolvedState);
 
-      if (resolvedState !== AppState.DASHBOARD) {
+      // Only clear professor context when leaving the professor flow.
+      // While on PROF_SELECT we may intentionally keep the selected professor + PIN modal open.
+      if (resolvedState !== AppState.DASHBOARD && resolvedState !== AppState.PROF_SELECT) {
         setSelectedProfessor(null);
         setIsPinModalOpen(false);
       }
@@ -168,7 +156,7 @@ const App: React.FC = () => {
     syncFromUrl();
     window.addEventListener('popstate', syncFromUrl);
     return () => window.removeEventListener('popstate', syncFromUrl);
-  }, [selectedProfessorFromStorage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [professors, selectedProfessor, isProfessorAuthenticated, isDeveloperAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const navigate = (nextState: AppState, prof?: Professor | null) => {
     const targetProf = prof ?? selectedProfessor;
@@ -181,31 +169,30 @@ const App: React.FC = () => {
   const handleDeveloperClick = () => navigate(AppState.DEV_LOGIN);
 
   const handleSelectProfessor = (prof: Professor) => {
-    localStorage.setItem(SELECTED_PROFESSOR_KEY, prof.id);
-    setProfessorAuthenticated(false);
+    setIsProfessorAuthenticated(false);
     setSelectedProfessor(prof);
     setIsPinModalOpen(true);
   };
 
   const handlePinVerified = () => {
-    setProfessorAuthenticated(true);
+    setIsProfessorAuthenticated(true);
     setIsPinModalOpen(false);
     navigate(AppState.DASHBOARD, selectedProfessor);
   };
 
   const handleDevLoginSuccess = () => {
-    setDeveloperAuthenticated(true);
+    setIsDeveloperAuthenticated(true);
     navigate(AppState.DEV_DASHBOARD);
   };
 
   const goBackToLanding = () => {
-    setDeveloperAuthenticated(false);
-    setProfessorAuthenticated(false);
+    setIsDeveloperAuthenticated(false);
+    setIsProfessorAuthenticated(false);
     navigate(AppState.LANDING);
   };
 
   const goBackToSelect = () => {
-    setProfessorAuthenticated(false);
+    setIsProfessorAuthenticated(false);
     navigate(AppState.PROF_SELECT);
   };
 
