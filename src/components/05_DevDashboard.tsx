@@ -3,6 +3,7 @@ import { Professor } from '../types';
 import { StorageService } from '../lib/storage';
 import ChangePinModal from './10_ChangePinModal';
 import { updateProfessorNameViaApi } from '../lib/api';
+import ChangeDevPasswordModal from './11_ChangeDevPasswordModal';
 import {
   ChevronLeft,
   Shield,
@@ -27,9 +28,12 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
   const [tempName, setTempName] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const topMenuRef = useRef<HTMLDivElement>(null);
 
   // State for shared Change PIN modal
   const [changePinTarget, setChangePinTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isTopMenuOpen, setIsTopMenuOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   // State for compartment QR editing
   const [editingCompartment, setEditingCompartment] = useState<{ id: string; name: string; data: string } | null>(null);
@@ -85,6 +89,9 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpenMenuId(null);
       }
+      if (topMenuRef.current && !topMenuRef.current.contains(event.target as Node)) {
+        setIsTopMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -104,7 +111,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
 
       <main className="flex-1 overflow-y-auto p-6 relative">
         <div className="w-full max-w-5xl mx-auto relative pt-4">
-          <div className="absolute top-0 left-0 z-20">
+          <div className="flex items-center justify-between gap-4 mb-4 px-1 relative z-20">
             <button
               onClick={onBack}
               className="p-2 hover:bg-blue-50 rounded-full transition-colors flex items-center gap-1 text-blue-900 font-bold"
@@ -112,6 +119,33 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
               <ChevronLeft size={20} className="text-yellow-600" />
               Back
             </button>
+
+            <div className="relative" ref={topMenuRef}>
+              <button
+                onClick={() => setIsTopMenuOpen((v) => !v)}
+                className="p-2 hover:bg-yellow-50 text-yellow-600 rounded-full transition-colors flex items-center justify-center"
+                aria-label="Developer menu"
+              >
+                <span className="text-2xl" role="img" aria-label="menu">
+                  ☰
+                </span>
+              </button>
+
+              {isTopMenuOpen && (
+                <div className="absolute right-0 top-full mt-4 w-64 bg-white border-2 border-yellow-500 rounded-2xl shadow-2xl overflow-hidden animate-scale-up z-50">
+                  <button
+                    onClick={() => {
+                      setIsChangePasswordOpen(true);
+                      setIsTopMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors"
+                  >
+                    <Shield size={18} className="text-yellow-600" />
+                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Change Password</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="w-full max-w-2xl mx-auto space-y-6 mt-4">
@@ -283,6 +317,16 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
           onSuccess={() => {
             alert(`PIN CODE UPDATED SUCCESSFULLY FOR ${changePinTarget.name.toUpperCase()}`);
             setChangePinTarget(null);
+          }}
+        />
+      )}
+
+      {isChangePasswordOpen && (
+        <ChangeDevPasswordModal
+          onClose={() => setIsChangePasswordOpen(false)}
+          onSuccess={() => {
+            alert('DEVELOPER PASSWORD UPDATED SUCCESSFULLY');
+            setIsChangePasswordOpen(false);
           }}
         />
       )}

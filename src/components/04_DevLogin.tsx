@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Lock, AlertCircle, ChevronLeft } from 'lucide-react';
+import { devLoginViaApi } from '../lib/api';
 
 interface DevLoginProps {
   onSuccess: () => void;
@@ -16,17 +17,21 @@ const DevLogin: React.FC<DevLoginProps> = ({ onSuccess, onBack }) => {
    * 1. Username matches "DEVELOPER" (case-insensitive check for input flexibility)
    * 2. Password accepts alphanumeric input with no fixed length limit
    */
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Authentication check: username is case-insensitive for input, target is 'DEVELOPER'
-    // Password target is '111111'
-    if (username.toUpperCase() === 'DEVELOPER' && password === '111111') {
-      onSuccess();
-    } else {
-      setError(true);
-      setPassword('');
+    try {
+      const ok = await devLoginViaApi(username, password);
+      if (ok) {
+        onSuccess();
+        return;
+      }
+    } catch {
+      // fall through
     }
+
+    setError(true);
+    setPassword('');
   };
 
   /**

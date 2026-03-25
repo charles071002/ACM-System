@@ -57,3 +57,27 @@ export const updateProfessorPinViaApi = async (professorId: string, newPin: stri
 
   return response.ok;
 };
+
+export const devLoginViaApi = async (username: string, password: string): Promise<boolean> => {
+  const response = await fetch(`${API_BASE_URL}/api/dev/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+
+  return response.ok;
+};
+
+export const devChangePasswordViaApi = async (
+  username: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<boolean> => {
+  const response = await fetch(`${API_BASE_URL}/api/dev/password`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, currentPassword, newPassword }),
+  });
+
+  return response.ok;
+};

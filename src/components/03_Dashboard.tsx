@@ -6,7 +6,6 @@ import {
   Weight,
   ChevronLeft,
   QrCode,
-  BookOpen,
   History,
   FileText,
   Calendar,
