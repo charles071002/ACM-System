@@ -426,9 +426,9 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
               </div>
               <p className="text-sm font-black uppercase text-yellow-400 tracking-widest text-center">COMPARTMENT IDENTITY</p>
             </div>
-            <div className="p-10 flex flex-col items-center gap-6">
-              <div className="p-4 bg-white border-4 border-blue-50 rounded-[2.5rem] shadow-inner">
-                <img src={compartmentQrUrl} alt="Compartment QR" className="w-48 h-48" />
+            <div className="p-7 sm:p-9 flex flex-col items-center gap-4 sm:gap-5">
+              <div className="p-2.5 sm:p-3 bg-white border-4 border-blue-50 rounded-[2.5rem] shadow-inner">
+                <img src={compartmentQrUrl} alt="Compartment QR" className="w-32 h-32 sm:w-36 sm:h-36" />
               </div>
               <div className="text-center">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Assigned to</p>
