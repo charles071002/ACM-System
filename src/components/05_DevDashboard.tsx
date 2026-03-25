@@ -207,7 +207,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                       ) : (
                         <div className="flex flex-col">
                           <span className="text-sm font-black text-blue-900 uppercase leading-none">{prof.name}</span>
-                          <span className="text-[9px] font-bold text-yellow-600 mt-1 uppercase tracking-wider">
+                          <span className="text-[10px] font-bold text-yellow-600 mt-1 uppercase tracking-widest">
                             {prof.department} DEPARTMENT
                           </span>
                         </div>

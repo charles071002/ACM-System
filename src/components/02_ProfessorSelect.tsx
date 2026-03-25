@@ -64,7 +64,7 @@ const ProfessorSelect: React.FC<ProfessorSelectProps> = ({ professors, onSelect,
                 </div>
 
                 <div className="flex flex-col items-center">
-                  <p className="font-black text-blue-900 leading-tight text-sm md:text-base group-hover:text-blue-800 transition-colors">
+                  <p className="font-black text-blue-900 leading-tight text-[12px] sm:text-[13px] md:text-sm group-hover:text-blue-800 transition-colors whitespace-nowrap truncate max-w-full">
                     {prof.name}
                   </p>
                   <p className="text-[10px] font-bold text-yellow-600 uppercase tracking-wider mt-1">
