@@ -418,7 +418,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
       {/* Compartment QR Modal */}
       {isCompartmentQrOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl border-4 border-yellow-500 animate-scale-up">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl border-4 border-yellow-500 animate-scale-up">
             <div className="bg-blue-900 p-8 flex flex-col items-center text-white relative">
               <button
                 onClick={() => {
@@ -490,7 +490,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
       {/* Log Action Modal */}
       {selectedLog && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-[2.5rem] w-full max-sm overflow-hidden shadow-2xl border-4 border-yellow-500 animate-scale-up">
+          <div className="bg-white rounded-[2.5rem] w-full max-sm max-h-[90vh] overflow-y-auto shadow-2xl border-4 border-yellow-500 animate-scale-up">
             <div className="bg-blue-900 p-8 flex flex-col items-center text-white relative">
               <button
                 onClick={() => {

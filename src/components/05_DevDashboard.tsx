@@ -347,7 +347,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
       {/* Edit Compartment QR Modal */}
       {editingCompartment && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-up border-4 border-yellow-500">
             <div className="bg-blue-900 p-8 flex flex-col items-center text-white text-center relative">
               <button
                 onClick={() => setEditingCompartment(null)}
@@ -398,7 +398,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
       {/* Edit Compartment Number Modal (frontend-only) */}
       {editingCompartmentNo && (
         <div className="fixed inset-0 z-[101] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500 min-h-[560px] max-h-[90vh]">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-y-auto shadow-2xl animate-scale-up border-4 border-yellow-500 min-h-[560px] max-h-[90vh]">
             <div className="bg-blue-900 p-6 flex flex-col items-center text-white text-center relative">
               <button
                 onClick={() => {
@@ -504,7 +504,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
       {/* Confirm Swap Dialog */}
       {editingCompartmentNo && isConfirmSwapOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-up border-4 border-yellow-500">
             <div className="bg-blue-900 p-6 flex flex-col items-center text-white text-center relative">
               <button
                 onClick={() => setIsConfirmSwapOpen(false)}

@@ -50,7 +50,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ professor, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500 flex flex-col max-h-[85vh]">
+      <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-y-auto shadow-2xl animate-scale-up border-4 border-yellow-500 flex flex-col max-h-[90vh]">
         {/* MODAL HEADER */}
         <div className="bg-[#1a3683] p-8 flex flex-col items-center text-white text-center relative flex-shrink-0">
           <button
