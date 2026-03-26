@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Professor } from '../types';
 import { StorageService } from '../lib/storage';
 import ChangePinModal from './10_ChangePinModal';
@@ -39,6 +39,14 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
   const [editingCompartment, setEditingCompartment] = useState<{ id: string; name: string; data: string } | null>(null);
   const [tempCompartmentData, setTempCompartmentData] = useState('');
 
+  // State for compartment number editing (frontend-only for now)
+  const [editingCompartmentNo, setEditingCompartmentNo] = useState<{ id: string; name: string; value: string } | null>(
+    null
+  );
+  const [compartmentNoNotice, setCompartmentNoNotice] = useState<{ kind: 'error'; text: string } | null>(null);
+  const [selectedSwapProfId, setSelectedSwapProfId] = useState<string | null>(null);
+  const [isConfirmSwapOpen, setIsConfirmSwapOpen] = useState(false);
+
   const handleStartEdit = (prof: Professor) => {
     setEditingId(prof.id);
     setTempName(prof.name);
@@ -75,6 +83,50 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
     setOpenMenuId(null);
   };
 
+  const handleStartEditCompartmentNo = (prof: Professor) => {
+    const currentNo = StorageService.getCompartmentNumber(prof.id, prof.id);
+    setEditingCompartmentNo({ id: prof.id, name: prof.name, value: currentNo });
+    setCompartmentNoNotice(null);
+    setSelectedSwapProfId(null);
+    setOpenMenuId(null);
+  };
+
+  const performSwap = () => {
+    if (!editingCompartmentNo) return;
+    const currentNormalized = StorageService.getCompartmentNumber(editingCompartmentNo.id, editingCompartmentNo.id);
+    if (!selectedSwapProfId) {
+      setCompartmentNoNotice({ kind: 'error', text: 'PLEASE SELECT A PROFESSOR TO SWAP WITH.' });
+      return;
+    }
+
+    const targetProf = profs.find((p) => p.id === selectedSwapProfId);
+    if (!targetProf) {
+      setCompartmentNoNotice({ kind: 'error', text: 'SELECTED PROFESSOR NOT FOUND.' });
+      return;
+    }
+
+    const targetNormalized = StorageService.getCompartmentNumber(targetProf.id, targetProf.id);
+    if (targetProf.id === editingCompartmentNo.id) {
+      setCompartmentNoNotice({ kind: 'error', text: 'CANNOT SWAP WITH THE SAME PROFESSOR.' });
+      return;
+    }
+
+    // Swap: exchange compartment numbers between the two professors.
+    StorageService.setCompartmentNumber(targetProf.id, currentNormalized);
+    StorageService.setCompartmentNumber(editingCompartmentNo.id, targetNormalized);
+    setProfs((prev) => [...prev]); // force rerender so badges update + list resort
+    setCompartmentNoNotice(null);
+  };
+
+  const handleSaveCompartmentNo = () => {
+    if (!editingCompartmentNo) return;
+    if (!selectedSwapProfId) {
+      setCompartmentNoNotice({ kind: 'error', text: 'PLEASE SELECT A PROFESSOR TO SWAP WITH.' });
+      return;
+    }
+    setIsConfirmSwapOpen(true);
+  };
+
   const handleSaveCompartment = async () => {
     if (editingCompartment) {
       try {
@@ -105,6 +157,21 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const sortedProfs = useMemo(() => {
+    const getCabinetNo = (p: Professor) => {
+      const raw = StorageService.getCompartmentNumber(p.id, p.id);
+      const n = Number.parseInt(raw, 10);
+      return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+    };
+
+    return [...profs].sort((a, b) => {
+      const aNo = getCabinetNo(a);
+      const bNo = getCabinetNo(b);
+      if (aNo !== bNo) return aNo - bNo;
+      return a.name.localeCompare(b.name);
+    });
+  }, [profs]);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white overflow-hidden relative">
@@ -169,7 +236,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
             </div>
 
             <div className="space-y-3" ref={menuRef}>
-              {profs.map((prof) => (
+              {sortedProfs.map((prof) => (
                 <div
                   key={prof.id}
                   className="bg-blue-50 border-2 border-blue-100 rounded-3xl p-4 shadow-sm animate-fade-in flex flex-col gap-4 relative"
@@ -177,7 +244,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 bg-blue-900 rounded-xl flex items-center justify-center text-yellow-400 font-black text-xs border border-yellow-500 flex-shrink-0">
-                        {prof.id}
+                        {StorageService.getCompartmentNumber(prof.id, prof.id)}
                       </div>
 
                       {editingId === prof.id ? (
@@ -226,7 +293,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                         </button>
 
                         {openMenuId === prof.id && (
-                          <div className="absolute right-0 top-12 w-56 bg-white border-2 border-yellow-500 rounded-2xl shadow-2xl z-50 overflow-hidden animate-scale-up">
+                          <div className="absolute right-0 top-12 w-72 bg-white border-2 border-yellow-500 rounded-2xl shadow-2xl z-50 overflow-hidden animate-scale-up">
                             <button
                               onClick={() => handleStartEdit(prof)}
                               className="w-full px-4 py-3.5 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
@@ -239,7 +306,16 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                               className="w-full px-4 py-3.5 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
                             >
                               <RotateCcw size={16} className="text-blue-900" />
-                              <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">Change PIN Code</span>
+                              <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">Edit PIN Code</span>
+                            </button>
+                            <button
+                              onClick={() => handleStartEditCompartmentNo(prof)}
+                              className="w-full px-4 py-3.5 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
+                            >
+                              <Box size={16} className="text-blue-900" />
+                              <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">
+                                Edit Compartment Number
+                              </span>
                             </button>
                             <button
                               onClick={() => handleStartEditCompartment(prof)}
@@ -312,6 +388,181 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                   className="py-4 bg-blue-900 text-yellow-400 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 border-b-4 border-yellow-600 flex items-center justify-center gap-2"
                 >
                   <Save size={16} /> Save Active QR
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Compartment Number Modal (frontend-only) */}
+      {editingCompartmentNo && (
+        <div className="fixed inset-0 z-[101] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500 min-h-[560px] max-h-[90vh]">
+            <div className="bg-blue-900 p-6 flex flex-col items-center text-white text-center relative">
+              <button
+                onClick={() => {
+                  setEditingCompartmentNo(null);
+                  setCompartmentNoNotice(null);
+                  setSelectedSwapProfId(null);
+                  setIsConfirmSwapOpen(false);
+                }}
+                className="absolute top-3 right-3 text-white/70 hover:text-white"
+              >
+                <X size={22} />
+              </button>
+
+              <div className="w-14 h-14 bg-yellow-500 rounded-full flex items-center justify-center mb-3 shadow-lg border-4 border-white/20">
+                <Box size={28} className="text-blue-900" />
+              </div>
+
+              <h3 className="text-lg font-black tracking-tight uppercase leading-none">
+                Compartment Number {StorageService.getCompartmentNumber(editingCompartmentNo.id, editingCompartmentNo.id)}
+              </h3>
+              <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest mt-1">{editingCompartmentNo.name}</p>
+            </div>
+
+            <div className="p-8">
+              <label className="block text-[10px] font-black text-blue-900 uppercase tracking-widest mb-2 px-1">
+                Swap With:
+              </label>
+              <div className="mb-6">
+                <div className="mb-3">
+                  <div className="w-full bg-blue-50 border-2 border-blue-100 rounded-2xl py-4 px-4 text-[10px] font-black text-blue-900 uppercase tracking-wider text-center shadow-inner">
+                    {(() => {
+                      if (!selectedSwapProfId) return 'NONE';
+                      const selected = profs.find((p) => p.id === selectedSwapProfId);
+                      if (!selected) return 'NONE';
+                      const selectedNo = StorageService.getCompartmentNumber(selected.id, selected.id);
+                      return `${selectedNo} - ${selected.name}`;
+                    })()}
+                  </div>
+                </div>
+                <div className="bg-white border-2 border-yellow-500 rounded-2xl shadow-inner overflow-hidden">
+                  {profs
+                    .filter((p) => p.id !== editingCompartmentNo.id)
+                    .map((p) => {
+                      const pNo = StorageService.getCompartmentNumber(p.id, p.id);
+                      const isSelected = selectedSwapProfId === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedSwapProfId(p.id);
+                            setCompartmentNoNotice(null);
+                          }}
+                          className={`w-full px-4 py-3 text-left transition-colors flex items-center justify-between gap-3 border-b border-gray-100 last:border-b-0 ${
+                            isSelected ? 'bg-blue-50' : 'hover:bg-blue-50'
+                          }`}
+                        >
+                          <span
+                            className={`text-[10px] font-black uppercase tracking-wider ${
+                              isSelected ? 'text-blue-900' : 'text-gray-600'
+                            }`}
+                          >
+                            {pNo} - {p.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {compartmentNoNotice?.kind === 'error' && (
+                <div
+                  className="-mt-4 mb-6 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-center border bg-red-50 text-red-700 border-red-200"
+                >
+                  {compartmentNoNotice.text}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => {
+                    setEditingCompartmentNo(null);
+                    setCompartmentNoNotice(null);
+                    setSelectedSwapProfId(null);
+                    setIsConfirmSwapOpen(false);
+                  }}
+                  className="py-4 bg-gray-100 text-gray-600 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveCompartmentNo}
+                  className="py-4 bg-blue-900 text-yellow-400 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 border-b-4 border-yellow-600 flex items-center justify-center gap-2"
+                >
+                  <Save size={16} /> Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Swap Dialog */}
+      {editingCompartmentNo && isConfirmSwapOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up border-4 border-yellow-500">
+            <div className="bg-blue-900 p-6 flex flex-col items-center text-white text-center relative">
+              <button
+                onClick={() => setIsConfirmSwapOpen(false)}
+                className="absolute top-3 right-3 text-white/70 hover:text-white"
+                aria-label="Close confirmation"
+              >
+                <X size={22} />
+              </button>
+              <h3 className="text-lg font-black tracking-tight uppercase leading-none">Confirm Change</h3>
+              <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest mt-1">Are you sure you want to swap?</p>
+            </div>
+
+            <div className="p-8">
+              <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl px-4 py-4 text-center shadow-inner">
+                {(() => {
+                  const fromNo = StorageService.getCompartmentNumber(editingCompartmentNo.id, editingCompartmentNo.id);
+                  const toProf = profs.find((p) => p.id === selectedSwapProfId);
+                  if (!toProf) {
+                    return (
+                      <p className="text-[10px] font-black text-red-700 uppercase tracking-wider">PLEASE SELECT A PROFESSOR.</p>
+                    );
+                  }
+                  const toNo = StorageService.getCompartmentNumber(toProf.id, toProf.id);
+
+                  return (
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <p className="text-[10px] font-black text-blue-900 uppercase tracking-wider text-center">
+                        {fromNo} - {editingCompartmentNo.name}
+                      </p>
+                      <p className="text-[12px] font-black text-blue-900/70 leading-none" aria-hidden="true">
+                        ↓
+                      </p>
+                      <p className="text-[10px] font-black text-blue-900 uppercase tracking-wider text-center">
+                        {toNo} - {toProf.name}
+                      </p>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mt-6">
+                <button
+                  onClick={() => setIsConfirmSwapOpen(false)}
+                  className="py-4 bg-gray-100 text-gray-600 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
+                >
+                  No
+                </button>
+                <button
+                  onClick={() => {
+                    performSwap();
+                    setIsConfirmSwapOpen(false);
+                    setEditingCompartmentNo(null);
+                    setCompartmentNoNotice(null);
+                    setSelectedSwapProfId(null);
+                  }}
+                  className="py-4 bg-blue-900 text-yellow-400 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 border-b-4 border-yellow-600 flex items-center justify-center gap-2"
+                >
+                  Yes
                 </button>
               </div>
             </div>

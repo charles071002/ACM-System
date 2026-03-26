@@ -13,6 +13,7 @@ export const StorageService = {
     QR_RECORDS: (profId: string) => `acm_qr_records_${profId}`,
     PIN: (profId: string) => `acm_pin_${profId}`,
     COMPARTMENT: (profId: string) => `acm_compartment_${profId}`,
+    COMPARTMENT_NO: (profId: string) => `acm_compartment_no_${profId}`,
     PROFESSOR_DATA: 'acm_professors_list',
   },
 
@@ -36,6 +37,15 @@ export const StorageService = {
 
   setCompartmentData: (profId: string, data: string) => {
     localStorage.setItem(StorageService.KEYS.COMPARTMENT(profId), data);
+  },
+
+  /** Compartment Number (Cabinet No) Management */
+  getCompartmentNumber: (profId: string, defaultNumber: string): string => {
+    return localStorage.getItem(StorageService.KEYS.COMPARTMENT_NO(profId)) || defaultNumber;
+  },
+
+  setCompartmentNumber: (profId: string, cabinetNo: string) => {
+    localStorage.setItem(StorageService.KEYS.COMPARTMENT_NO(profId), cabinetNo);
   },
 
   /** Professor Data Management */
