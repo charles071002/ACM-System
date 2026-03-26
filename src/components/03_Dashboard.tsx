@@ -247,6 +247,7 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
     return isNaN(d.getTime()) ? '--:--' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const assignedCabinetNo = StorageService.getCompartmentNumber(professor.id, professor.id);
   const compartmentQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(compartmentData)}`;
 
   return (
@@ -284,12 +285,19 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
             <div className="flex flex-col gap-0 min-w-0 flex-1 px-1">
               <h2 className="text-[25px] font-black text-blue-900 tracking-wide uppercase">Professor dashboard</h2>
               <div className="flex flex-col gap-0">
-                <span className="font-black text-yellow-600 uppercase tracking-widest text-[14px] sm:text-[16px]">
-                  {professor.name}
-                </span>
-                <span className="text-blue-900 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider opacity-90 whitespace-nowrap">
-                  {professor.department} DEPARTMENT
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="w-10 h-10 bg-blue-900 rounded-xl flex items-center justify-center text-yellow-400 font-black text-sm border border-yellow-500 shrink-0">
+                    {assignedCabinetNo}
+                  </span>
+                  <div className="flex items-baseline gap-2 min-w-0 flex-wrap">
+                    <span className="font-black text-yellow-600 uppercase tracking-widest text-[16px] sm:text-[18px]">
+                      {professor.name}
+                    </span>
+                    <span className="text-blue-900 font-bold text-[11px] sm:text-[12px] uppercase tracking-wider opacity-90 whitespace-nowrap">
+                      {professor.department} DEPARTMENT
+                    </span>
+                  </div>
+                </div>
                 <div className="w-full border-t border-blue-900/10 mt-2" />
                 <button
                   onClick={() => {
@@ -424,7 +432,9 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
               <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mb-3">
                 <Box size={32} className="text-blue-900" />
               </div>
-              <p className="text-sm font-black uppercase text-yellow-400 tracking-widest text-center">COMPARTMENT IDENTITY</p>
+              <p className="text-sm font-black uppercase text-yellow-400 tracking-widest text-center">
+                COMPARTMENT NUMBER - {assignedCabinetNo}
+              </p>
             </div>
             <div className="p-7 sm:p-9 flex flex-col items-center gap-4 sm:gap-5">
               <div className="p-2.5 sm:p-3 bg-white border-4 border-blue-50 rounded-[2.5rem] shadow-inner">
@@ -450,13 +460,13 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
                         onClick={() => handleDownloadCompartmentQr('IMAGE')}
                         className="px-4 py-3 text-[10px] font-black text-blue-900 uppercase hover:bg-blue-50 border-b border-blue-50 flex items-center justify-between"
                       >
-                        Save as Image <ImageIcon size={14} className="text-yellow-600" />
+                        Download as Image <ImageIcon size={14} className="text-yellow-600" />
                       </button>
                       <button
                         onClick={() => handleDownloadCompartmentQr('PDF')}
                         className="px-4 py-3 text-[10px] font-black text-blue-900 uppercase hover:bg-blue-50 flex items-center justify-between"
                       >
-                        Save as PDF <FileText size={14} className="text-yellow-600" />
+                        Download as PDF <FileText size={14} className="text-yellow-600" />
                       </button>
                     </div>
                   )}
