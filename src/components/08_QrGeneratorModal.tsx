@@ -219,15 +219,10 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
       const startIso = startDateTime.toISOString();
       const expiryIso = expiryDateTime.toISOString();
 
-      // MySQL-friendly LOCAL datetime: YYYY-MM-DD HH:mm:ss
-      // Important: do NOT slice `toISOString()` because that converts to UTC and can shift hours.
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const toMySqlLocalDateTime = (d: Date) =>
-        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(
-          d.getSeconds()
-        )}`;
-      const startForDb = toMySqlLocalDateTime(startDateTime);
-      const expiryForDb = toMySqlLocalDateTime(expiryDateTime);
+      // MySQL-friendly UTC datetime: YYYY-MM-DD HH:mm:ss
+      const toMySqlDateTime = (iso: string) => iso.slice(0, 19).replace('T', ' ');
+      const startForDb = toMySqlDateTime(startIso);
+      const expiryForDb = toMySqlDateTime(expiryIso);
 
       if (initialRecord) {
         StorageService.updateQrRecord(professor.id, {
