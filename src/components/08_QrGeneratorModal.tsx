@@ -261,7 +261,7 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
           {!generatedUrl ? (
             <form onSubmit={handleGenerate} className="flex flex-col gap-4">
               <div className="space-y-1">
-                <label className={labelClasses}>Enter Zone Name</label>
+                <label className={labelClasses}>ENTER QR CODE ID</label>
                 <input
                   type="text"
                   value={qrName}
