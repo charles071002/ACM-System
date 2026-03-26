@@ -20,6 +20,7 @@ import { StorageService } from '../lib/storage';
 import ChangePinModal from './10_ChangePinModal';
 import QrGeneratorModal from './08_QrGeneratorModal';
 import HistoryModal from './09_HistoryModal';
+import { deleteSubmissionViaApi } from '../lib/api';
 
 interface DashboardProps {
   professor: Professor;
@@ -133,16 +134,36 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
     setSubmissionCount((prev) => prev + 1);
   };
 
-  const handleClearQrRecords = () => {
-    StorageService.clearQrRecords(professor.id);
-    refreshLogs();
+  const handleClearQrRecords = async () => {
+    // Only manually clearing should delete from DB.
+    // Expired records are removed locally by cleanupExpiredQrRecords and should NOT delete DB rows.
+    const recordsToDelete = [...qrRecords];
+
+    try {
+      for (const record of recordsToDelete) {
+        // `record.name` is the QR CODE ID (submission_id) that we insert into DB.
+        const ok = await deleteSubmissionViaApi(professor.id, record.name);
+        if (!ok) throw new Error('DB delete failed');
+      }
+      StorageService.clearQrRecords(professor.id);
+      refreshLogs();
+    } catch {
+      alert('FAILED TO DELETE SUBMISSIONS IN DATABASE.');
+    }
   };
 
-  const handleDeleteLog = (id: string) => {
-    StorageService.deleteQrRecord(professor.id, id);
-    refreshLogs();
-    setSelectedLog(null);
-    setShowLogDownloadMenu(false);
+  const handleDeleteLog = async (record: QrRecord) => {
+    try {
+      const ok = await deleteSubmissionViaApi(professor.id, record.name);
+      if (!ok) throw new Error('DB delete failed');
+
+      StorageService.deleteQrRecord(professor.id, record.id);
+      refreshLogs();
+      setSelectedLog(null);
+      setShowLogDownloadMenu(false);
+    } catch {
+      alert('FAILED TO DELETE SUBMISSION IN DATABASE.');
+    }
   };
 
   const downloadQrImage = async (qrUrl: string, fileName: string) => {
@@ -549,7 +570,9 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
               </div>
 
               <button
-                onClick={() => handleDeleteLog(selectedLog.id)}
+                onClick={() => {
+                  void handleDeleteLog(selectedLog);
+                }}
                 className="w-full flex items-center justify-center gap-3 p-5 bg-red-50 rounded-[2rem] hover:bg-red-100 transition-all group active:scale-95"
               >
                 <Trash className="text-red-600 group-hover:scale-110 transition-transform" size={24} />

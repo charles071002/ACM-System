@@ -91,3 +91,59 @@ export const devChangePasswordViaApi = async (
 
   return response.ok;
 };
+
+export const createSubmissionViaApi = async (
+  professorId: string,
+  submissionId: string,
+  cabinetNo: string,
+  startTime: string,
+  endTime: string
+): Promise<boolean> => {
+  const response = await fetch(`${API_BASE_URL}/api/professors/${encodeURIComponent(professorId)}/submissions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      submissionId,
+      cabinetNo,
+      startTime,
+      endTime,
+    }),
+  });
+
+  return response.ok;
+};
+
+export const updateSubmissionViaApi = async (
+  professorId: string,
+  submissionId: string,
+  cabinetNo: string,
+  startTime: string,
+  endTime: string
+): Promise<boolean> => {
+  const response = await fetch(`${API_BASE_URL}/api/professors/${encodeURIComponent(professorId)}/submissions`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      submissionId,
+      cabinetNo,
+      startTime,
+      endTime,
+    }),
+  });
+
+  return response.ok;
+};
+
+export const deleteSubmissionViaApi = async (
+  professorId: string,
+  submissionId: string
+): Promise<boolean> => {
+  const response = await fetch(
+    `${API_BASE_URL}/api/professors/${encodeURIComponent(professorId)}/submissions/${encodeURIComponent(submissionId)}`,
+    {
+      method: 'DELETE',
+    }
+  );
+
+  return response.ok;
+};

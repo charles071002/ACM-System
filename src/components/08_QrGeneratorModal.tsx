@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Professor, QrRecord } from '../types';
 import { StorageService } from '../lib/storage';
+import { createSubmissionViaApi, updateSubmissionViaApi } from '../lib/api';
 
 interface QrGeneratorModalProps {
   professor: Professor;
@@ -205,7 +206,7 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
     }
   };
 
-  const handleDone = () => {
+  const handleDone = async () => {
     if (generatedUrl) {
       const startDateTime = new Date(`${startDate}T${startTime}`);
       const expiryDateTime = new Date(`${expiryDate}T${expiryTime}`);
@@ -218,6 +219,16 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
       const startIso = startDateTime.toISOString();
       const expiryIso = expiryDateTime.toISOString();
 
+      // MySQL-friendly LOCAL datetime: YYYY-MM-DD HH:mm:ss
+      // Important: do NOT slice `toISOString()` because that converts to UTC and can shift hours.
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const toMySqlLocalDateTime = (d: Date) =>
+        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(
+          d.getSeconds()
+        )}`;
+      const startForDb = toMySqlLocalDateTime(startDateTime);
+      const expiryForDb = toMySqlLocalDateTime(expiryDateTime);
+
       if (initialRecord) {
         StorageService.updateQrRecord(professor.id, {
           ...initialRecord,
@@ -227,6 +238,26 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
         });
       } else {
         StorageService.saveQrRecord(professor.id, qrName, startIso, expiryIso);
+      }
+
+      try {
+        // `cabinetNo` comes from the compartment number assigned to this professor in the app.
+        // This is required for the `submissions.cabinet_no` foreign key.
+        const cabinetNo = StorageService.getCompartmentNumber(professor.id, professor.id);
+
+        if (!cabinetNo) {
+          alert('PLEASE ASSIGN A COMPARTMENT NUMBER FIRST (1-8).');
+          return;
+        }
+
+        const ok = initialRecord
+          ? await updateSubmissionViaApi(professor.id, qrName, cabinetNo, startForDb, expiryForDb)
+          : await createSubmissionViaApi(professor.id, qrName, cabinetNo, startForDb, expiryForDb);
+        if (!ok) {
+          alert('FAILED TO SAVE SUBMISSION IN DATABASE.');
+        }
+      } catch {
+        alert('DATABASE CONNECTION FAILED (SUBMISSION NOT SAVED).');
       }
     }
     onClose();
