@@ -266,7 +266,6 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
                   type="text"
                   value={qrName}
                   onChange={(e) => setQrName(e.target.value)}
-                  placeholder="e.g. Zone 1 - East Wing"
                   className="w-full bg-gray-50 border-2 border-blue-50 rounded-2xl py-4 text-center text-sm font-bold text-blue-900 focus:outline-none focus:border-yellow-500 transition-all shadow-inner px-4"
                   required
                 />
