@@ -155,7 +155,7 @@ router.patch('/:id/compartment-qr', async (req, res) => {
  * - cabinet_no is derived from professors.cabinet_no (foreign key to cabinets)
  * - status is computed using NOW():
  *   pending: NOW() < start_time
- *   active: start_time <= NOW() <= end_time
+ *   in_progress: start_time <= NOW() <= end_time
  *   expired: NOW() > end_time
  */
 router.post('/:id/submissions', async (req, res) => {
@@ -175,7 +175,7 @@ router.post('/:id/submissions', async (req, res) => {
         (?, ?, ?, ?, ?, 
           CASE
             WHEN ? > NOW() THEN 'pending'
-            WHEN NOW() BETWEEN ? AND ? THEN 'active'
+            WHEN NOW() BETWEEN ? AND ? THEN 'in_progress'
             ELSE 'expired'
           END
         )
@@ -229,7 +229,7 @@ router.patch('/:id/submissions', async (req, res) => {
         ${endTimeColumn} = ?,
         ${statusColumn} = CASE
           WHEN ? > NOW() THEN 'pending'
-          WHEN NOW() BETWEEN ? AND ? THEN 'active'
+          WHEN NOW() BETWEEN ? AND ? THEN 'in_progress'
           ELSE 'expired'
         END
       WHERE ${professorIdColumn} = ? AND ${submissionIdColumn} = ?
