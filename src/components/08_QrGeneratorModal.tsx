@@ -18,6 +18,28 @@ interface QrGeneratorModalProps {
   initialRecord?: QrRecord;
 }
 
+/** 24-hour only: H:mm or HH:mm, optional :ss → HH:mm:ss */
+const parse24hTimeToHms = (timeStr: string): string | null => {
+  const raw = timeStr.trim();
+  if (!raw) return null;
+  const m = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  const sec = m[3] ? parseInt(m[3], 10) : 0;
+  if (Number.isNaN(h) || Number.isNaN(min) || Number.isNaN(sec)) return null;
+  if (h < 0 || h > 23 || min < 0 || min > 59 || sec < 0 || sec > 59) return null;
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+};
+
+const toMySqlDateTime = (dateYmd: string, timeHm: string): string | null => {
+  const hms = parse24hTimeToHms(timeHm);
+  if (!hms) return null;
+  return `${dateYmd} ${hms}`;
+};
+
+const sanitizeTimeTyping = (value: string) => value.replace(/[^\d:]/g, '').slice(0, 8);
+
 const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose, initialRecord }) => {
   const [qrName, setQrName] = useState(initialRecord?.name || '');
 
@@ -88,7 +110,9 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
    */
   useEffect(() => {
     if (!initialRecord && startDate && startTime) {
-      const startDateTime = new Date(`${startDate}T${startTime}`);
+      const hms = parse24hTimeToHms(startTime);
+      if (!hms) return;
+      const startDateTime = new Date(`${startDate}T${hms}`);
       if (!isNaN(startDateTime.getTime())) {
         const recommendedExpiry = new Date(startDateTime.getTime() + 60 * 60 * 1000);
         setExpiryDate(formatDate(recommendedExpiry));
@@ -108,8 +132,15 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
     e.preventDefault();
     if (!qrName || !startDate || !startTime || !expiryDate || !expiryTime) return;
 
-    const startDateTime = new Date(`${startDate}T${startTime}`);
-    const expiryDateTime = new Date(`${expiryDate}T${expiryTime}`);
+    const startHms = parse24hTimeToHms(startTime);
+    const expiryHms = parse24hTimeToHms(expiryTime);
+    if (!startHms || !expiryHms) {
+      setValidationError('Use 24-hour time (e.g. 13:00 for 1:00 PM).');
+      return;
+    }
+
+    const startDateTime = new Date(`${startDate}T${startHms}`);
+    const expiryDateTime = new Date(`${expiryDate}T${expiryHms}`);
 
     if (isNaN(startDateTime.getTime()) || isNaN(expiryDateTime.getTime())) {
       setValidationError('Invalid date or time entered.');
@@ -140,9 +171,9 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
     }
 
     setValidationError(null);
-    const encodedData = encodeURIComponent(
-      `ACM_SYNC:${qrName}:${startDateTime.toISOString()}:${expiryDateTime.toISOString()}`,
-    );
+    const startPayload = `${startDate}T${startHms}`;
+    const endPayload = `${expiryDate}T${expiryHms}`;
+    const encodedData = encodeURIComponent(`ACM_SYNC:${qrName}:${startPayload}:${endPayload}`);
     setGeneratedUrl(
       `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedData}`,
     );
@@ -208,31 +239,39 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
 
   const handleDone = async () => {
     if (generatedUrl) {
-      const startDateTime = new Date(`${startDate}T${startTime}`);
-      const expiryDateTime = new Date(`${expiryDate}T${expiryTime}`);
+      const startHms = parse24hTimeToHms(startTime);
+      const expiryHms = parse24hTimeToHms(expiryTime);
+      if (!startHms || !expiryHms) {
+        alert('Use 24-hour time (e.g. 13:00 for 1:00 PM).');
+        return;
+      }
+
+      const startPayload = `${startDate}T${startHms}`;
+      const endPayload = `${expiryDate}T${expiryHms}`;
+      const startDateTime = new Date(startPayload);
+      const expiryDateTime = new Date(endPayload);
 
       if (isNaN(startDateTime.getTime()) || isNaN(expiryDateTime.getTime())) {
         alert('Error saving: Invalid date value.');
         return;
       }
 
-      const startIso = startDateTime.toISOString();
-      const expiryIso = expiryDateTime.toISOString();
-
-      // MySQL-friendly UTC datetime: YYYY-MM-DD HH:mm:ss
-      const toMySqlDateTime = (iso: string) => iso.slice(0, 19).replace('T', ' ');
-      const startForDb = toMySqlDateTime(startIso);
-      const expiryForDb = toMySqlDateTime(expiryIso);
+      const startForDb = toMySqlDateTime(startDate, startTime);
+      const expiryForDb = toMySqlDateTime(expiryDate, expiryTime);
+      if (!startForDb || !expiryForDb) {
+        alert('Error saving: Invalid time value.');
+        return;
+      }
 
       if (initialRecord) {
         StorageService.updateQrRecord(professor.id, {
           ...initialRecord,
           name: qrName,
-          startsAt: startIso,
-          expiresAt: expiryIso,
+          startsAt: startPayload,
+          expiresAt: endPayload,
         });
       } else {
-        StorageService.saveQrRecord(professor.id, qrName, startIso, expiryIso);
+        StorageService.saveQrRecord(professor.id, qrName, startPayload, endPayload);
       }
 
       try {
@@ -311,12 +350,15 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className={labelClasses}>Start Time</label>
+                  <label className={labelClasses}>Start Time (24h)</label>
                   <div className="relative group">
                     <input
-                      type="time"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="13:00"
+                      title="24-hour time, e.g. 13:00 for 1:00 PM"
                       value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
+                      onChange={(e) => setStartTime(sanitizeTimeTyping(e.target.value))}
                       className={inputClasses}
                       required
                     />
@@ -338,12 +380,15 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className={labelClasses}>Expiry Time</label>
+                  <label className={labelClasses}>Expiry Time (24h)</label>
                   <div className="relative group">
                     <input
-                      type="time"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="14:00"
+                      title="24-hour time, e.g. 14:00 for 2:00 PM"
                       value={expiryTime}
-                      onChange={(e) => setExpiryTime(e.target.value)}
+                      onChange={(e) => setExpiryTime(sanitizeTimeTyping(e.target.value))}
                       className={inputClasses}
                       required
                     />
