@@ -57,14 +57,14 @@ const ProfessorSelect: React.FC<ProfessorSelectProps> = ({ professors, onSelect,
               <button
                 key={prof.id}
                 onClick={() => onSelect(prof)}
-                className="p-4 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-yellow-500 hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group"
+                className="min-w-0 p-4 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:border-yellow-500 hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group"
               >
-                <div className="w-16 h-16 bg-blue-50 text-blue-900 rounded-2xl flex items-center justify-center group-hover:bg-blue-900 group-hover:text-yellow-400 transition-all border border-blue-100 group-hover:border-yellow-500">
+                <div className="w-16 h-16 shrink-0 bg-blue-50 text-blue-900 rounded-2xl flex items-center justify-center group-hover:bg-blue-900 group-hover:text-yellow-400 transition-all border border-blue-100 group-hover:border-yellow-500">
                   <GraduationCap size={32} />
                 </div>
 
-                <div className="flex flex-col items-center">
-                  <p className="font-black text-blue-900 leading-tight text-[12px] sm:text-[13px] md:text-sm group-hover:text-blue-800 transition-colors whitespace-nowrap truncate max-w-full">
+                <div className="flex min-w-0 w-full flex-col items-center">
+                  <p className="w-full min-w-0 max-w-full px-0.5 text-center font-black text-blue-900 text-balance leading-snug text-[11px] sm:text-[12px] md:text-sm group-hover:text-blue-800 transition-colors break-words max-md:line-clamp-2 max-md:overflow-hidden md:overflow-visible">
                     {prof.name}
                   </p>
                   <p className="text-[10px] font-bold text-yellow-600 uppercase tracking-wider mt-1">

@@ -13,7 +13,6 @@ import {
   X,
   GraduationCap,
   Menu as MenuIcon,
-  QrCode,
   Box,
 } from 'lucide-react';
 
@@ -34,10 +33,6 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
   const [changePinTarget, setChangePinTarget] = useState<{ id: string; name: string } | null>(null);
   const [isTopMenuOpen, setIsTopMenuOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-
-  // State for compartment QR editing
-  const [editingCompartment, setEditingCompartment] = useState<{ id: string; name: string; data: string } | null>(null);
-  const [tempCompartmentData, setTempCompartmentData] = useState('');
 
   // State for compartment number editing (frontend-only for now)
   const [editingCompartmentNo, setEditingCompartmentNo] = useState<{ id: string; name: string; value: string } | null>(
@@ -76,13 +71,6 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
     setOpenMenuId(null);
   };
 
-  const handleStartEditCompartment = (prof: Professor) => {
-    const currentData = StorageService.getCompartmentData(prof.id, prof.name);
-    setEditingCompartment({ id: prof.id, name: prof.name, data: currentData });
-    setTempCompartmentData(currentData);
-    setOpenMenuId(null);
-  };
-
   const handleStartEditCompartmentNo = (prof: Professor) => {
     const currentNo = StorageService.getCompartmentNumber(prof.id, prof.id);
     setEditingCompartmentNo({ id: prof.id, name: prof.name, value: currentNo });
@@ -91,31 +79,54 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
     setOpenMenuId(null);
   };
 
-  const performSwap = () => {
-    if (!editingCompartmentNo) return;
-    const currentNormalized = StorageService.getCompartmentNumber(editingCompartmentNo.id, editingCompartmentNo.id);
+  const performSwap = async (): Promise<boolean> => {
+    if (!editingCompartmentNo) return false;
+    const profAId = editingCompartmentNo.id;
+    const currentNormalized = StorageService.getCompartmentNumber(profAId, profAId);
     if (!selectedSwapProfId) {
       setCompartmentNoNotice({ kind: 'error', text: 'PLEASE SELECT A PROFESSOR TO SWAP WITH.' });
-      return;
+      return false;
     }
 
     const targetProf = profs.find((p) => p.id === selectedSwapProfId);
     if (!targetProf) {
       setCompartmentNoNotice({ kind: 'error', text: 'SELECTED PROFESSOR NOT FOUND.' });
-      return;
+      return false;
     }
 
-    const targetNormalized = StorageService.getCompartmentNumber(targetProf.id, targetProf.id);
-    if (targetProf.id === editingCompartmentNo.id) {
+    const profBId = targetProf.id;
+    const targetNormalized = StorageService.getCompartmentNumber(profBId, profBId);
+    if (profBId === profAId) {
       setCompartmentNoNotice({ kind: 'error', text: 'CANNOT SWAP WITH THE SAME PROFESSOR.' });
-      return;
+      return false;
     }
 
-    // Swap: exchange compartment numbers between the two professors.
-    StorageService.setCompartmentNumber(targetProf.id, currentNormalized);
-    StorageService.setCompartmentNumber(editingCompartmentNo.id, targetNormalized);
-    setProfs((prev) => [...prev]); // force rerender so badges update + list resort
-    setCompartmentNoNotice(null);
+    // After swap: A gets targetNormalized, B gets currentNormalized — QR payloads follow cabinet numbers.
+    const nextQrA = StorageService.compartmentQrPayloadFromCabinetNo(targetNormalized);
+    const nextQrB = StorageService.compartmentQrPayloadFromCabinetNo(currentNormalized);
+
+    StorageService.setCompartmentNumber(profBId, currentNormalized);
+    StorageService.setCompartmentNumber(profAId, targetNormalized);
+
+    try {
+      const [okA, okB] = await Promise.all([
+        updateProfessorCompartmentQrViaApi(profAId, nextQrA),
+        updateProfessorCompartmentQrViaApi(profBId, nextQrB),
+      ]);
+      if (!okA || !okB) {
+        throw new Error('compartment_qr update failed');
+      }
+      StorageService.setCompartmentData(profAId, nextQrA);
+      StorageService.setCompartmentData(profBId, nextQrB);
+      setProfs((prev) => [...prev]);
+      setCompartmentNoNotice(null);
+      return true;
+    } catch {
+      StorageService.setCompartmentNumber(profBId, targetNormalized);
+      StorageService.setCompartmentNumber(profAId, currentNormalized);
+      alert('FAILED TO UPDATE COMPARTMENT QR IN DATABASE. SWAP WAS NOT APPLIED.');
+      return false;
+    }
   };
 
   const handleSaveCompartmentNo = () => {
@@ -125,23 +136,6 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
       return;
     }
     setIsConfirmSwapOpen(true);
-  };
-
-  const handleSaveCompartment = async () => {
-    if (editingCompartment) {
-      try {
-        const ok = await updateProfessorCompartmentQrViaApi(editingCompartment.id, tempCompartmentData);
-        if (!ok) {
-          alert('FAILED TO UPDATE COMPARTMENT QR IN DATABASE');
-          return;
-        }
-        StorageService.setCompartmentData(editingCompartment.id, tempCompartmentData);
-        setEditingCompartment(null);
-        alert('Compartment QR Data Updated.');
-      } catch {
-        alert('DATABASE CONNECTION FAILED');
-      }
-    }
   };
 
   // Close menu on click outside
@@ -310,19 +304,12 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                             </button>
                             <button
                               onClick={() => handleStartEditCompartmentNo(prof)}
-                              className="w-full px-4 py-3.5 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
+                              className="w-full px-4 py-3.5 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors"
                             >
                               <Box size={16} className="text-blue-900" />
                               <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">
                                 Edit Compartment Number
                               </span>
-                            </button>
-                            <button
-                              onClick={() => handleStartEditCompartment(prof)}
-                              className="w-full px-4 py-3.5 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors"
-                            >
-                              <QrCode size={16} className="text-yellow-600" />
-                              <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">Edit Compartment QR</span>
                             </button>
                           </div>
                         )}
@@ -343,57 +330,6 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
           </div>
         </div>
       </main>
-
-      {/* Edit Compartment QR Modal */}
-      {editingCompartment && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-up border-4 border-yellow-500">
-            <div className="bg-blue-900 p-8 flex flex-col items-center text-white text-center relative">
-              <button
-                onClick={() => setEditingCompartment(null)}
-                className="absolute top-4 right-4 text-white/70 hover:text-white"
-              >
-                <X size={24} />
-              </button>
-
-              <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mb-4 shadow-lg border-4 border-white/20">
-                <Box size={32} className="text-blue-900" />
-              </div>
-
-              <h3 className="text-xl font-black tracking-tight uppercase leading-none">Compartment QR</h3>
-              <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest mt-2">{editingCompartment.name}</p>
-            </div>
-
-            <div className="p-8">
-              <label className="block text-[10px] font-black text-blue-900 uppercase tracking-widest mb-2 px-1">
-                Override Data (Default: Name)
-              </label>
-              <textarea
-                value={tempCompartmentData}
-                onChange={(e) => setTempCompartmentData(e.target.value)}
-                rows={3}
-                placeholder="Enter custom QR content..."
-                className="w-full bg-blue-50 border-2 border-blue-100 rounded-2xl py-4 px-4 text-xs font-bold text-blue-900 focus:outline-none focus:border-yellow-500 transition-all shadow-inner resize-none mb-6"
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={() => setEditingCompartment(null)}
-                  className="py-4 bg-gray-100 text-gray-600 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveCompartment}
-                  className="py-4 bg-blue-900 text-yellow-400 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 border-b-4 border-yellow-600 flex items-center justify-center gap-2"
-                >
-                  <Save size={16} /> Save Active QR
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Edit Compartment Number Modal (frontend-only) */}
       {editingCompartmentNo && (
@@ -554,11 +490,15 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                 </button>
                 <button
                   onClick={() => {
-                    performSwap();
-                    setIsConfirmSwapOpen(false);
-                    setEditingCompartmentNo(null);
-                    setCompartmentNoNotice(null);
-                    setSelectedSwapProfId(null);
+                    void (async () => {
+                      const ok = await performSwap();
+                      setIsConfirmSwapOpen(false);
+                      if (ok) {
+                        setEditingCompartmentNo(null);
+                        setCompartmentNoNotice(null);
+                        setSelectedSwapProfId(null);
+                      }
+                    })();
                   }}
                   className="py-4 bg-blue-900 text-yellow-400 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all active:scale-95 border-b-4 border-yellow-600 flex items-center justify-center gap-2"
                 >

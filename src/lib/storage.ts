@@ -39,6 +39,12 @@ export const StorageService = {
     localStorage.setItem(StorageService.KEYS.COMPARTMENT(profId), data);
   },
 
+  /** Payload encoded in compartment QR; matches DB `compartment_qr` (e.g. "open 7"). */
+  compartmentQrPayloadFromCabinetNo: (cabinetNo: string): string => {
+    const n = String(cabinetNo ?? '').trim();
+    return `open ${n}`;
+  },
+
   /** Compartment Number (Cabinet No) Management */
   getCompartmentNumber: (profId: string, defaultNumber: string): string => {
     return localStorage.getItem(StorageService.KEYS.COMPARTMENT_NO(profId)) || defaultNumber;

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
   QrCode,
   CheckCircle2,
   Download,
+  Copy,
   AlertCircle,
   FileText,
   Image as ImageIcon,
@@ -12,11 +13,159 @@ import { Professor, QrRecord } from '../types';
 import { StorageService } from '../lib/storage';
 import { createSubmissionViaApi, updateSubmissionViaApi } from '../lib/api';
 
-interface QrGeneratorModalProps {
+/** Human-readable caption for each slot (same for every compartment). */
+export const FLOOR_QR_TIME_LABELS = ['7am - 11am', '11am - 3pm', '3pm - 8pm', 'anytime'] as const;
+
+/**
+ * Segment used in QR payload ids: `floor{segment}qr1` … `qr4` (e.g. compartment "2" → `floor2qr1`).
+ */
+export const compartmentSegmentForFloorQr = (cabinetNo: string): string => {
+  const t = cabinetNo.trim();
+  if (!t) return '1';
+  if (/^\d+$/.test(t)) {
+    return String(parseInt(t, 10));
+  }
+  const slug = t.replace(/[^a-zA-Z0-9]+/g, '').toLowerCase();
+  return slug || '1';
+};
+
+export const floorQrIdsForCompartment = (cabinetNo: string): string[] => {
+  const seg = compartmentSegmentForFloorQr(cabinetNo);
+  return [1, 2, 3, 4].map((n) => `floor${seg}qr${n}`);
+};
+
+const floorQrImageUrl = (id: string) =>
+  `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(id)}`;
+
+const downloadFloorQrPng = async (id: string) => {
+  const url = floorQrImageUrl(id);
+  const fileName = `${id}.png`;
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const objectUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(objectUrl);
+  } catch {
+    window.open(url, '_blank');
+  }
+};
+
+const copyFloorQrImage = async (id: string) => {
+  const url = floorQrImageUrl(id);
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const pngBlob =
+      blob.type === 'image/png' ? blob : new Blob([await blob.arrayBuffer()], { type: 'image/png' });
+
+    if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
+        return;
+      } catch {
+        /* fall through to text */
+      }
+    }
+
+    await navigator.clipboard.writeText(id);
+  } catch {
+    try {
+      await navigator.clipboard.writeText(id);
+    } catch {
+      alert('COPY FAILED — try download instead.');
+    }
+  }
+};
+
+interface FloorQrGalleryModalProps {
   professor: Professor;
   onClose: () => void;
-  initialRecord?: QrRecord;
 }
+
+const FloorQrGalleryModal: React.FC<FloorQrGalleryModalProps> = ({ professor, onClose }) => {
+  const cabinetNo = StorageService.getCompartmentNumber(professor.id, professor.id);
+  const floorQrIds = useMemo(() => floorQrIdsForCompartment(cabinetNo), [professor.id, cabinetNo]);
+
+  return (
+  <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+    <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-up border-2 border-yellow-500">
+      <div className="relative flex flex-col items-center bg-blue-900 px-6 py-4 text-center text-white sm:px-8 sm:py-5">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 text-yellow-500/70 hover:text-yellow-400 sm:right-5 sm:top-5"
+        >
+          <X size={22} />
+        </button>
+
+        <div className="mb-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-white/20 bg-yellow-500 shadow-md sm:h-12 sm:w-12">
+          <QrCode size={22} className="text-blue-900" />
+        </div>
+
+        <h3 className="text-base font-black uppercase tracking-tight text-yellow-400 sm:text-lg">
+          View Available QR Code
+        </h3>
+      </div>
+
+      <div className="p-6 sm:p-10">
+        <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-5 sm:gap-x-6 sm:gap-y-6">
+          {floorQrIds.map((id, slotIndex) => {
+            const caption = FLOOR_QR_TIME_LABELS[slotIndex];
+            return (
+            <div
+              key={id}
+              className="flex w-fit max-w-full flex-row items-center gap-2 sm:gap-3"
+            >
+              <div className="flex shrink-0 flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void downloadFloorQrPng(id);
+                  }}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-blue-900 bg-white text-blue-900 shadow-sm transition hover:bg-blue-50 active:scale-95 sm:h-10 sm:w-10"
+                  aria-label={`Download QR for ${caption}`}
+                >
+                  <Download size={18} className="text-blue-900" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void copyFloorQrImage(id);
+                  }}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-blue-900 bg-white text-blue-900 shadow-sm transition hover:bg-blue-50 active:scale-95 sm:h-10 sm:w-10"
+                  aria-label={`Copy QR for ${caption}`}
+                >
+                  <Copy size={18} className="text-blue-900" />
+                </button>
+              </div>
+
+              <div className="flex w-fit max-w-full flex-col items-center gap-2 rounded-2xl border border-blue-100 bg-blue-50/60 px-2.5 py-3 shadow-inner sm:px-3 sm:py-3.5">
+                <div className="rounded-xl border border-gray-200 bg-white p-1.5 shadow-sm sm:p-2">
+                  <img
+                    src={floorQrImageUrl(id)}
+                    alt={`QR ${id}`}
+                    className="h-[112px] w-[112px] sm:h-[128px] sm:w-[128px] md:h-[136px] md:w-[136px]"
+                  />
+                </div>
+                <span className="text-center text-sm font-black tracking-wide text-blue-900 sm:text-base">
+                  {caption}
+                </span>
+              </div>
+            </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  </div>
+  );
+};
 
 /** 24-hour only: H:mm or HH:mm, optional :ss → HH:mm:ss */
 const parse24hTimeToHms = (timeStr: string): string | null => {
@@ -40,14 +189,18 @@ const toMySqlDateTime = (dateYmd: string, timeHm: string): string | null => {
 
 const sanitizeTimeTyping = (value: string) => value.replace(/[^\d:]/g, '').slice(0, 8);
 
-const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose, initialRecord }) => {
+interface SessionQrFormModalProps {
+  professor: Professor;
+  initialRecord?: QrRecord;
+  onClose: () => void;
+}
+
+const SessionQrFormModal: React.FC<SessionQrFormModalProps> = ({ professor, initialRecord, onClose }) => {
   const [qrName, setQrName] = useState(initialRecord?.name || '');
 
-  // Separate Date and Time state for Start
   const [startDate, setStartDate] = useState('');
   const [startTime, setStartTime] = useState('');
 
-  // Separate Date and Time state for Expiry
   const [expiryDate, setExpiryDate] = useState('');
   const [expiryTime, setExpiryTime] = useState('');
 
@@ -66,10 +219,6 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
     return `${hours}:${minutes}`;
   };
 
-  /**
-   * INITIAL POPULATION
-   * Recommends start time based on most recent log or current time.
-   */
   useEffect(() => {
     if (initialRecord) {
       const s = new Date(initialRecord.startsAt);
@@ -88,10 +237,8 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
       let start: Date;
 
       if (existingRecords.length > 0) {
-        // Recommend start time to be the expiry time of the most recently generated QR code
         start = new Date(existingRecords[0].expiresAt);
       } else {
-        // Default to current time for first QR
         start = new Date();
       }
 
@@ -104,30 +251,22 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
     }
   }, [initialRecord, professor.id]);
 
-  /**
-   * REACTIVE RECOMMENDATION
-   * Automatically updates expiry time to 1 hour after the selected start time.
-   */
   useEffect(() => {
-    if (!initialRecord && startDate && startTime) {
-      const hms = parse24hTimeToHms(startTime);
-      if (!hms) return;
-      const startDateTime = new Date(`${startDate}T${hms}`);
-      if (!isNaN(startDateTime.getTime())) {
-        const recommendedExpiry = new Date(startDateTime.getTime() + 60 * 60 * 1000);
-        setExpiryDate(formatDate(recommendedExpiry));
-        setExpiryTime(formatTime(recommendedExpiry));
-      }
+    if (initialRecord) return;
+    if (!startDate || !startTime) return;
+    const hms = parse24hTimeToHms(startTime);
+    if (!hms) return;
+    const startDateTime = new Date(`${startDate}T${hms}`);
+    if (!isNaN(startDateTime.getTime())) {
+      const recommendedExpiry = new Date(startDateTime.getTime() + 60 * 60 * 1000);
+      setExpiryDate(formatDate(recommendedExpiry));
+      setExpiryTime(formatTime(recommendedExpiry));
     }
   }, [startDate, startTime, initialRecord]);
 
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  /**
-   * GENERATION LOGIC WITH OVERLAP VALIDATION
-   * Validates dates and ensures no overlapping time intervals exist in the logs.
-   */
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!qrName || !startDate || !startTime || !expiryDate || !expiryTime) return;
@@ -152,16 +291,13 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
       return;
     }
 
-    // OVERLAP CHECK: Disallow multiple QR codes for the same interval
     const existingRecords = StorageService.getQrRecords(professor.id);
     const hasOverlap = existingRecords.some((record) => {
-      // If editing, ignore the original version of this record
       if (initialRecord && record.id === initialRecord.id) return false;
 
       const existingStart = new Date(record.startsAt);
       const existingEnd = new Date(record.expiresAt);
 
-      // standard interval overlap formula: (StartA < EndB) and (EndA > StartB)
       return startDateTime < existingEnd && expiryDateTime > existingStart;
     });
 
@@ -270,28 +406,40 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
           startsAt: startPayload,
           expiresAt: endPayload,
         });
+
+        try {
+          const cabinetNo = StorageService.getCompartmentNumber(professor.id, professor.id);
+
+          if (!cabinetNo) {
+            alert('PLEASE ASSIGN A COMPARTMENT NUMBER FIRST (1-8).');
+            return;
+          }
+
+          const ok = await updateSubmissionViaApi(professor.id, qrName, cabinetNo, startForDb, expiryForDb);
+          if (!ok) {
+            alert('FAILED TO SAVE SUBMISSION IN DATABASE.');
+          }
+        } catch {
+          alert('DATABASE CONNECTION FAILED (SUBMISSION NOT SAVED).');
+        }
       } else {
         StorageService.saveQrRecord(professor.id, qrName, startPayload, endPayload);
-      }
 
-      try {
-        // `cabinetNo` comes from the compartment number assigned to this professor in the app.
-        // This is required for the `submissions.cabinet_no` foreign key.
-        const cabinetNo = StorageService.getCompartmentNumber(professor.id, professor.id);
+        try {
+          const cabinetNo = StorageService.getCompartmentNumber(professor.id, professor.id);
 
-        if (!cabinetNo) {
-          alert('PLEASE ASSIGN A COMPARTMENT NUMBER FIRST (1-8).');
-          return;
+          if (!cabinetNo) {
+            alert('PLEASE ASSIGN A COMPARTMENT NUMBER FIRST (1-8).');
+            return;
+          }
+
+          const ok = await createSubmissionViaApi(professor.id, qrName, cabinetNo, startForDb, expiryForDb);
+          if (!ok) {
+            alert('FAILED TO SAVE SUBMISSION IN DATABASE.');
+          }
+        } catch {
+          alert('DATABASE CONNECTION FAILED (SUBMISSION NOT SAVED).');
         }
-
-        const ok = initialRecord
-          ? await updateSubmissionViaApi(professor.id, qrName, cabinetNo, startForDb, expiryForDb)
-          : await createSubmissionViaApi(professor.id, qrName, cabinetNo, startForDb, expiryForDb);
-        if (!ok) {
-          alert('FAILED TO SAVE SUBMISSION IN DATABASE.');
-        }
-      } catch {
-        alert('DATABASE CONNECTION FAILED (SUBMISSION NOT SAVED).');
       }
     }
     onClose();
@@ -307,6 +455,7 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
       <div className="bg-white rounded-[2.5rem] w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-up border-4 border-yellow-500">
         <div className="bg-blue-900 p-8 flex flex-col items-center text-white text-center relative">
           <button
+            type="button"
             onClick={onClose}
             className="absolute top-6 right-6 text-yellow-500/70 hover:text-yellow-400"
           >
@@ -419,6 +568,7 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
                 <div className="flex gap-2 relative">
                   <div className="w-full flex flex-col">
                     <button
+                      type="button"
                       onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                       className="w-full py-3 bg-blue-50 text-blue-900 rounded-xl font-black text-[10px] uppercase flex items-center justify-center gap-2 border-2 border-blue-100 active:scale-95 transition-transform"
                     >
@@ -428,8 +578,9 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
                     {showDownloadMenu && (
                       <div className="absolute bottom-full left-0 mb-2 w-full bg-white border-2 border-blue-100 rounded-2xl shadow-2xl z-20 flex flex-col overflow-hidden animate-slide-up">
                         <button
+                          type="button"
                           onClick={() => {
-                            handleDownload('IMAGE');
+                            void handleDownload('IMAGE');
                             setShowDownloadMenu(false);
                           }}
                           className="px-4 py-3 text-[9px] font-black text-blue-900 uppercase hover:bg-blue-50 border-b border-blue-50 flex items-center justify-between"
@@ -437,8 +588,9 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
                           Save as Image <ImageIcon size={12} className="text-yellow-600" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => {
-                            handleDownload('PDF');
+                            void handleDownload('PDF');
                             setShowDownloadMenu(false);
                           }}
                           className="px-4 py-3 text-[9px] font-black text-blue-900 uppercase hover:bg-blue-50 flex items-center justify-between"
@@ -451,7 +603,10 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
                 </div>
 
                 <button
-                  onClick={handleDone}
+                  type="button"
+                  onClick={() => {
+                    void handleDone();
+                  }}
                   className="w-full mt-2 py-4 bg-green-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg hover:bg-green-700 transition-all border-b-4 border-green-800 flex items-center justify-center gap-2"
                 >
                   <CheckCircle2 size={20} /> Finish & Save
@@ -465,5 +620,19 @@ const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, onClose,
   );
 };
 
-export default QrGeneratorModal;
+interface QrGeneratorModalProps {
+  professor: Professor;
+  onClose: () => void;
+  initialRecord?: QrRecord;
+  /** With no log selected: `'floor'` = static 2×2 codes; `'session'` = timed QR registration. */
+  view?: 'floor' | 'session';
+}
 
+const QrGeneratorModal: React.FC<QrGeneratorModalProps> = ({ professor, initialRecord, onClose, view = 'session' }) => {
+  if (!initialRecord && view === 'floor') {
+    return <FloorQrGalleryModal professor={professor} onClose={onClose} />;
+  }
+  return <SessionQrFormModal professor={professor} initialRecord={initialRecord} onClose={onClose} />;
+};
+
+export default QrGeneratorModal;
