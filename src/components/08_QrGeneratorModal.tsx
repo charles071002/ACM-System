@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { Professor, QrRecord } from '../types';
 import { StorageService } from '../lib/storage';
-import { createSubmissionViaApi, updateSubmissionViaApi } from '../lib/api';
 
 /** Human-readable caption for each slot (same for every compartment). */
 export const FLOOR_QR_TIME_LABELS = ['7am - 11am', '11am - 3pm', '3pm - 8pm', 'anytime'] as const;
@@ -179,12 +178,6 @@ const parse24hTimeToHms = (timeStr: string): string | null => {
   if (Number.isNaN(h) || Number.isNaN(min) || Number.isNaN(sec)) return null;
   if (h < 0 || h > 23 || min < 0 || min > 59 || sec < 0 || sec > 59) return null;
   return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-};
-
-const toMySqlDateTime = (dateYmd: string, timeHm: string): string | null => {
-  const hms = parse24hTimeToHms(timeHm);
-  if (!hms) return null;
-  return `${dateYmd} ${hms}`;
 };
 
 const sanitizeTimeTyping = (value: string) => value.replace(/[^\d:]/g, '').slice(0, 8);
@@ -392,13 +385,6 @@ const SessionQrFormModal: React.FC<SessionQrFormModalProps> = ({ professor, init
         return;
       }
 
-      const startForDb = toMySqlDateTime(startDate, startTime);
-      const expiryForDb = toMySqlDateTime(expiryDate, expiryTime);
-      if (!startForDb || !expiryForDb) {
-        alert('Error saving: Invalid time value.');
-        return;
-      }
-
       if (initialRecord) {
         StorageService.updateQrRecord(professor.id, {
           ...initialRecord,
@@ -406,40 +392,8 @@ const SessionQrFormModal: React.FC<SessionQrFormModalProps> = ({ professor, init
           startsAt: startPayload,
           expiresAt: endPayload,
         });
-
-        try {
-          const cabinetNo = StorageService.getCompartmentNumber(professor.id, professor.id);
-
-          if (!cabinetNo) {
-            alert('PLEASE ASSIGN A COMPARTMENT NUMBER FIRST (1-8).');
-            return;
-          }
-
-          const ok = await updateSubmissionViaApi(professor.id, qrName, cabinetNo, startForDb, expiryForDb);
-          if (!ok) {
-            alert('FAILED TO SAVE SUBMISSION IN DATABASE.');
-          }
-        } catch {
-          alert('DATABASE CONNECTION FAILED (SUBMISSION NOT SAVED).');
-        }
       } else {
         StorageService.saveQrRecord(professor.id, qrName, startPayload, endPayload);
-
-        try {
-          const cabinetNo = StorageService.getCompartmentNumber(professor.id, professor.id);
-
-          if (!cabinetNo) {
-            alert('PLEASE ASSIGN A COMPARTMENT NUMBER FIRST (1-8).');
-            return;
-          }
-
-          const ok = await createSubmissionViaApi(professor.id, qrName, cabinetNo, startForDb, expiryForDb);
-          if (!ok) {
-            alert('FAILED TO SAVE SUBMISSION IN DATABASE.');
-          }
-        } catch {
-          alert('DATABASE CONNECTION FAILED (SUBMISSION NOT SAVED).');
-        }
       }
     }
     onClose();

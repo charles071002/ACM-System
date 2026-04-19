@@ -1,0 +1,14 @@
+# Blueprint: https://render.com/docs/blueprint-spec
+# After first deploy, set all secrets in the Render dashboard (Environment).
+# MySQL must be reachable from the internet (Render has no bundled MySQL).
+
+services:
+  - type: web
+    name: acm-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
