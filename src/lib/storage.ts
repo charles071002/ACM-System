@@ -45,6 +45,29 @@ export const StorageService = {
     return `open ${n}`;
   },
 
+  /** Parse DB `compartment_qr` (e.g. "open 8") back to cabinet number label for display. */
+  cabinetNoFromCompartmentQr: (compartmentQr: string): string => {
+    const t = String(compartmentQr ?? '').trim();
+    const m = t.match(/^open\s+(.+)$/i);
+    if (m) return m[1].trim();
+    return t || '1';
+  },
+
+  /** Prefer server `compartment_qr`; fallback to legacy local compartment number. */
+  cabinetNoForProfessor: (profId: string, compartmentQr: string | undefined): string => {
+    const qr = String(compartmentQr ?? '').trim();
+    if (qr) return StorageService.cabinetNoFromCompartmentQr(qr);
+    return StorageService.getCompartmentNumber(profId, profId);
+  },
+
+  /** QR payload string: DB value if present, else derived from legacy local cabinet number. */
+  compartmentPayloadForProfessor: (profId: string, compartmentQr: string | undefined): string => {
+    const qr = String(compartmentQr ?? '').trim();
+    if (qr) return qr;
+    const no = StorageService.getCompartmentNumber(profId, profId);
+    return StorageService.compartmentQrPayloadFromCabinetNo(no);
+  },
+
   /** Compartment Number (Cabinet No) Management */
   getCompartmentNumber: (profId: string, defaultNumber: string): string => {
     return localStorage.getItem(StorageService.KEYS.COMPARTMENT_NO(profId)) || defaultNumber;

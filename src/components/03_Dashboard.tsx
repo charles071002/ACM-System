@@ -84,8 +84,8 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
     setShowCompartmentDownloadMenu(false);
   };
 
-  const assignedCabinetNo = StorageService.getCompartmentNumber(professor.id, professor.id);
-  const compartmentData = StorageService.compartmentQrPayloadFromCabinetNo(assignedCabinetNo);
+  const assignedCabinetNo = StorageService.cabinetNoForProfessor(professor.id, professor.compartmentQr);
+  const compartmentData = StorageService.compartmentPayloadForProfessor(professor.id, professor.compartmentQr);
   const compartmentQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(compartmentData)}`;
 
   return (

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AppState, Professor } from '../types';
 import LandingPage from '../screens/01_landing/LandingScreen';
 import ProfessorSelect from '../screens/02_professor-select/ProfessorSelectScreen';
@@ -85,6 +85,20 @@ const App: React.FC = () => {
 
   const replaceUrl = (path: string) => window.history.replaceState({}, '', path);
   const pushUrl = (path: string) => window.history.pushState({}, '', path);
+
+  const refreshProfessors = useCallback(async () => {
+    try {
+      const remote = await fetchProfessorsFromApi();
+      setProfessors(remote);
+      setSelectedProfessor((prev) => {
+        if (!prev) return null;
+        const next = remote.find((p) => p.id === prev.id);
+        return next ?? prev;
+      });
+    } catch {
+      /* keep existing list */
+    }
+  }, []);
 
   // Strict DB-only source of truth for professor registry.
   useEffect(() => {
@@ -237,6 +251,7 @@ const App: React.FC = () => {
           <DevDashboard
             initialProfessors={professors}
             onBack={goBackToLanding}
+            onProfessorsUpdated={refreshProfessors}
           />
         )}
       </div>

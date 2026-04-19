@@ -19,10 +19,15 @@ import {
 interface DevDashboardProps {
   initialProfessors: Professor[];
   onBack: () => void;
+  onProfessorsUpdated?: () => Promise<void>;
 }
 
-const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }) => {
+const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack, onProfessorsUpdated }) => {
   const [profs, setProfs] = useState<Professor[]>(initialProfessors);
+
+  useEffect(() => {
+    setProfs(initialProfessors);
+  }, [initialProfessors]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [tempName, setTempName] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -34,7 +39,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
   const [isTopMenuOpen, setIsTopMenuOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
-  // State for compartment number editing (frontend-only for now)
+  // Compartment numbers follow DB `compartment_qr` (synced across devices).
   const [editingCompartmentNo, setEditingCompartmentNo] = useState<{ id: string; name: string; value: string } | null>(
     null
   );
@@ -72,7 +77,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
   };
 
   const handleStartEditCompartmentNo = (prof: Professor) => {
-    const currentNo = StorageService.getCompartmentNumber(prof.id, prof.id);
+    const currentNo = StorageService.cabinetNoForProfessor(prof.id, prof.compartmentQr);
     setEditingCompartmentNo({ id: prof.id, name: prof.name, value: currentNo });
     setCompartmentNoNotice(null);
     setSelectedSwapProfId(null);
@@ -82,7 +87,6 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
   const performSwap = async (): Promise<boolean> => {
     if (!editingCompartmentNo) return false;
     const profAId = editingCompartmentNo.id;
-    const currentNormalized = StorageService.getCompartmentNumber(profAId, profAId);
     if (!selectedSwapProfId) {
       setCompartmentNoNotice({ kind: 'error', text: 'PLEASE SELECT A PROFESSOR TO SWAP WITH.' });
       return false;
@@ -95,18 +99,22 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
     }
 
     const profBId = targetProf.id;
-    const targetNormalized = StorageService.getCompartmentNumber(profBId, profBId);
+    const profA = profs.find((p) => p.id === profAId);
+    const profB = profs.find((p) => p.id === profBId);
+    if (!profA || !profB) {
+      setCompartmentNoNotice({ kind: 'error', text: 'PROFESSOR NOT FOUND.' });
+      return false;
+    }
+
+    const currentNormalized = StorageService.cabinetNoForProfessor(profAId, profA.compartmentQr);
+    const targetNormalized = StorageService.cabinetNoForProfessor(profBId, profB.compartmentQr);
     if (profBId === profAId) {
       setCompartmentNoNotice({ kind: 'error', text: 'CANNOT SWAP WITH THE SAME PROFESSOR.' });
       return false;
     }
 
-    // After swap: A gets targetNormalized, B gets currentNormalized — QR payloads follow cabinet numbers.
     const nextQrA = StorageService.compartmentQrPayloadFromCabinetNo(targetNormalized);
     const nextQrB = StorageService.compartmentQrPayloadFromCabinetNo(currentNormalized);
-
-    StorageService.setCompartmentNumber(profBId, currentNormalized);
-    StorageService.setCompartmentNumber(profAId, targetNormalized);
 
     try {
       const [okA, okB] = await Promise.all([
@@ -116,14 +124,17 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
       if (!okA || !okB) {
         throw new Error('compartment_qr update failed');
       }
-      StorageService.setCompartmentData(profAId, nextQrA);
-      StorageService.setCompartmentData(profBId, nextQrB);
-      setProfs((prev) => [...prev]);
+      setProfs((prev) =>
+        prev.map((p) => {
+          if (p.id === profAId) return { ...p, compartmentQr: nextQrA };
+          if (p.id === profBId) return { ...p, compartmentQr: nextQrB };
+          return p;
+        })
+      );
+      await onProfessorsUpdated?.();
       setCompartmentNoNotice(null);
       return true;
     } catch {
-      StorageService.setCompartmentNumber(profBId, targetNormalized);
-      StorageService.setCompartmentNumber(profAId, currentNormalized);
       alert('FAILED TO UPDATE COMPARTMENT QR IN DATABASE. SWAP WAS NOT APPLIED.');
       return false;
     }
@@ -154,7 +165,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
 
   const sortedProfs = useMemo(() => {
     const getCabinetNo = (p: Professor) => {
-      const raw = StorageService.getCompartmentNumber(p.id, p.id);
+      const raw = StorageService.cabinetNoForProfessor(p.id, p.compartmentQr);
       const n = Number.parseInt(raw, 10);
       return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
     };
@@ -238,7 +249,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 bg-blue-900 rounded-xl flex items-center justify-center text-yellow-400 font-black text-xs border border-yellow-500 flex-shrink-0">
-                        {StorageService.getCompartmentNumber(prof.id, prof.id)}
+                        {StorageService.cabinetNoForProfessor(prof.id, prof.compartmentQr)}
                       </div>
 
                       {editingId === prof.id ? (
@@ -353,7 +364,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
               </div>
 
               <h3 className="text-lg font-black tracking-tight uppercase leading-none">
-                Compartment Number {StorageService.getCompartmentNumber(editingCompartmentNo.id, editingCompartmentNo.id)}
+                Compartment Number {editingCompartmentNo.value}
               </h3>
               <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest mt-1">{editingCompartmentNo.name}</p>
             </div>
@@ -369,7 +380,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                       if (!selectedSwapProfId) return 'NONE';
                       const selected = profs.find((p) => p.id === selectedSwapProfId);
                       if (!selected) return 'NONE';
-                      const selectedNo = StorageService.getCompartmentNumber(selected.id, selected.id);
+                      const selectedNo = StorageService.cabinetNoForProfessor(selected.id, selected.compartmentQr);
                       return `${selectedNo} - ${selected.name}`;
                     })()}
                   </div>
@@ -378,7 +389,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
                   {profs
                     .filter((p) => p.id !== editingCompartmentNo.id)
                     .map((p) => {
-                      const pNo = StorageService.getCompartmentNumber(p.id, p.id);
+                      const pNo = StorageService.cabinetNoForProfessor(p.id, p.compartmentQr);
                       const isSelected = selectedSwapProfId === p.id;
                       return (
                         <button
@@ -456,14 +467,17 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack }
             <div className="p-8">
               <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl px-4 py-4 text-center shadow-inner">
                 {(() => {
-                  const fromNo = StorageService.getCompartmentNumber(editingCompartmentNo.id, editingCompartmentNo.id);
+                  const fromProf = profs.find((p) => p.id === editingCompartmentNo.id);
+                  const fromNo = fromProf
+                    ? StorageService.cabinetNoForProfessor(fromProf.id, fromProf.compartmentQr)
+                    : editingCompartmentNo.value;
                   const toProf = profs.find((p) => p.id === selectedSwapProfId);
                   if (!toProf) {
                     return (
                       <p className="text-[10px] font-black text-red-700 uppercase tracking-wider">PLEASE SELECT A PROFESSOR.</p>
                     );
                   }
-                  const toNo = StorageService.getCompartmentNumber(toProf.id, toProf.id);
+                  const toNo = StorageService.cabinetNoForProfessor(toProf.id, toProf.compartmentQr);
 
                   return (
                     <div className="flex flex-col items-center justify-center gap-2">

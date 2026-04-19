@@ -8,6 +8,7 @@ type ApiProfessor = {
   id: string | number;
   name: string;
   department?: string | null;
+  compartmentQr?: string | null;
 };
 
 export const fetchProfessorsFromApi = async (): Promise<Professor[]> => {
@@ -27,6 +28,7 @@ export const fetchProfessorsFromApi = async (): Promise<Professor[]> => {
     id: String(item.id),
     name: item.name,
     department: item.department || 'CPE',
+    compartmentQr: item.compartmentQr != null && String(item.compartmentQr).trim() !== '' ? String(item.compartmentQr).trim() : undefined,
   }));
 };
 

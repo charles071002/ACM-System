@@ -10,7 +10,7 @@ const compartmentColumn = process.env.DB_COMPARTMENT_COLUMN || 'compartment_qr';
 router.get('/', async (_req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT id, ${nameColumn} AS name, 'CPE' AS department FROM ${tableName} ORDER BY id ASC`
+      `SELECT id, ${nameColumn} AS name, 'CPE' AS department, IFNULL(${compartmentColumn}, '') AS compartmentQr FROM ${tableName} ORDER BY id ASC`
     );
 
     res.json({
@@ -19,6 +19,7 @@ router.get('/', async (_req, res) => {
         id: String(row.id),
         name: row.name,
         department: row.department || 'CPE',
+        compartmentQr: String(row.compartmentQr ?? '').trim(),
       })),
     });
   } catch (error) {

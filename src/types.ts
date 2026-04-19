@@ -3,6 +3,8 @@ export interface Professor {
   id: string;
   name: string;
   department: string;
+  /** Raw DB `compartment_qr` value (e.g. `open 8`). When set, all devices use this instead of localStorage. */
+  compartmentQr?: string;
 }
 
 export interface SubmissionData {

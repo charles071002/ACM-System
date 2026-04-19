@@ -88,7 +88,7 @@ interface FloorQrGalleryModalProps {
 }
 
 const FloorQrGalleryModal: React.FC<FloorQrGalleryModalProps> = ({ professor, onClose }) => {
-  const cabinetNo = StorageService.getCompartmentNumber(professor.id, professor.id);
+  const cabinetNo = StorageService.cabinetNoForProfessor(professor.id, professor.compartmentQr);
   const floorQrIds = useMemo(() => floorQrIdsForCompartment(cabinetNo), [professor.id, cabinetNo]);
 
   return (
