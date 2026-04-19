@@ -4,7 +4,9 @@ import { StorageService } from '../lib/storage';
 import ChangePinModal from './10_ChangePinModal';
 import { updateProfessorCompartmentQrViaApi, updateProfessorNameViaApi } from '../lib/api';
 import ChangeDevPasswordModal from './11_ChangeDevPasswordModal';
+import DeveloperManualModal from './07_DeveloperManualModal';
 import {
+  BookOpen,
   ChevronLeft,
   Shield,
   Edit3,
@@ -38,6 +40,7 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack, 
   const [changePinTarget, setChangePinTarget] = useState<{ id: string; name: string } | null>(null);
   const [isTopMenuOpen, setIsTopMenuOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isDeveloperManualOpen, setIsDeveloperManualOpen] = useState(false);
 
   // Compartment numbers follow DB `compartment_qr` (synced across devices).
   const [editingCompartmentNo, setEditingCompartmentNo] = useState<{ id: string; name: string; value: string } | null>(
@@ -215,14 +218,26 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack, 
               {isTopMenuOpen && (
                 <div className="absolute right-0 top-full mt-4 w-64 bg-white border-2 border-yellow-500 rounded-2xl shadow-2xl overflow-hidden animate-scale-up z-50">
                   <button
+                    type="button"
                     onClick={() => {
                       setIsChangePasswordOpen(true);
                       setIsTopMenuOpen(false);
                     }}
-                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors"
+                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors border-b border-gray-100"
                   >
                     <Shield size={18} className="text-yellow-600" />
                     <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Change Password</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDeveloperManualOpen(true);
+                      setIsTopMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-4 text-left flex items-center gap-3 hover:bg-blue-50 transition-colors"
+                  >
+                    <BookOpen size={18} className="text-yellow-600" />
+                    <span className="text-[11px] font-black text-blue-900 uppercase tracking-widest">Developer Manual</span>
                   </button>
                 </div>
               )}
@@ -544,6 +559,8 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack, 
           }}
         />
       )}
+
+      {isDeveloperManualOpen && <DeveloperManualModal onClose={() => setIsDeveloperManualOpen(false)} />}
     </div>
   );
 };
