@@ -345,14 +345,6 @@ const DevDashboard: React.FC<DevDashboardProps> = ({ initialProfessors, onBack, 
                 </div>
               ))}
             </div>
-
-            <div className="py-8 text-center">
-              <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest leading-relaxed">
-                ACM SYSTEM V2.5.0 CLOUD SYNC: DISABLED
-                <br />
-                SECURE REGISTRY DATABASE IS ACTIVE
-              </p>
-            </div>
           </div>
         </div>
       </main>
