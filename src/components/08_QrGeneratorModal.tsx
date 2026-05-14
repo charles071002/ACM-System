@@ -34,8 +34,17 @@ const NEAR_END_LEAD_MS = 15 * 60 * 1000;
 
 const floorQrActiveStorageKey = (profId: string) => `acm_floor_qr_slot_active_${profId}`;
 
-const floorQrNotifyDedupeKey = (profId: string, slotIndex: number, dayKey: string) =>
-  `acm_floor_qr_schedule_notify_${profId}_${slotIndex}_${dayKey}`;
+const floorQrNotifyNearDedupeKey = (profId: string, slotIndex: number, dayKey: string) =>
+  `acm_floor_qr_schedule_notify_near_${profId}_${slotIndex}_${dayKey}`;
+
+const floorQrNotifyEndDedupeKey = (profId: string, slotIndex: number, dayKey: string) =>
+  `acm_floor_qr_schedule_notify_end_${profId}_${slotIndex}_${dayKey}`;
+
+const formatCollectTimeLabel = (hour: number, minute: number) => {
+  const d = new Date();
+  d.setHours(hour, minute, 0, 0);
+  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+};
 
 const FLOOR_QR_ACTIVE_CHANGED_EVENT = 'acm-floor-qr-active-changed';
 
@@ -257,14 +266,32 @@ export function useFloorQrScheduleEndNotifications(professor: Professor) {
         const nearOrPast = now.getTime() >= end.getTime() - NEAR_END_LEAD_MS;
         if (!nearOrPast) return;
 
-        const storageKey = floorQrNotifyDedupeKey(professor.id, slotIndex, dayKey);
-        if (localStorage.getItem(storageKey)) return;
-
-        localStorage.setItem(storageKey, '1');
-
         const scheduleLabel = FLOOR_QR_SCHEDULE_DISPLAY_LABELS[slotIndex];
         const qrId = floorQrIds[slotIndex];
-        const toastId = `${professor.id}-${slotIndex}-${dayKey}-${now.getTime()}`;
+        const endTimeLabel = formatCollectTimeLabel(endH, endM);
+        const nowMs = now.getTime();
+        const endMs = end.getTime();
+
+        if (nowMs < endMs) {
+          const nearKey = floorQrNotifyNearDedupeKey(professor.id, slotIndex, dayKey);
+          if (localStorage.getItem(nearKey)) return;
+          localStorage.setItem(nearKey, '1');
+          const toastId = `${professor.id}-${slotIndex}-${dayKey}-near-${nowMs}`;
+          setToasts((prev) => [
+            ...prev,
+            {
+              id: toastId,
+              title: 'Submission window ending soon',
+              body: `The submission schedule for ${scheduleLabel} (${qrId}) is near the end. Submitted papers should be ready to collect at ${endTimeLabel}.`,
+            },
+          ]);
+          return;
+        }
+
+        const endKey = floorQrNotifyEndDedupeKey(professor.id, slotIndex, dayKey);
+        if (localStorage.getItem(endKey)) return;
+        localStorage.setItem(endKey, '1');
+        const toastId = `${professor.id}-${slotIndex}-${dayKey}-end-${nowMs}`;
         setToasts((prev) => [
           ...prev,
           {
