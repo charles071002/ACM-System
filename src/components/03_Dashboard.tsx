@@ -12,7 +12,10 @@ import {
 } from 'lucide-react';
 import { StorageService } from '../lib/storage';
 import ChangePinModal from './10_ChangePinModal';
-import QrGeneratorModal from './08_QrGeneratorModal';
+import QrGeneratorModal, {
+  FloorQrScheduleToastStack,
+  useFloorQrScheduleEndNotifications,
+} from './08_QrGeneratorModal';
 
 interface DashboardProps {
   professor: Professor;
@@ -21,6 +24,8 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }) => {
+  const { toasts: floorQrScheduleToasts, dismissToast: dismissFloorQrScheduleToast } =
+    useFloorQrScheduleEndNotifications(professor);
   const [isChangePinOpen, setIsChangePinOpen] = useState(false);
   const [isQrGeneratorOpen, setIsQrGeneratorOpen] = useState(false);
   const [isCompartmentQrOpen, setIsCompartmentQrOpen] = useState(false);
@@ -90,6 +95,10 @@ const Dashboard: React.FC<DashboardProps> = ({ professor, onBack, onOpenManual }
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <FloorQrScheduleToastStack
+        toasts={floorQrScheduleToasts}
+        onDismissById={dismissFloorQrScheduleToast}
+      />
       <header className="bg-white border-b-4 border-yellow-500 text-blue-900 p-6 shadow-sm relative flex flex-col items-center justify-center text-center z-10 flex-shrink-0">
         <h1 className="text-2xl font-black uppercase tracking-wider leading-none mb-1">ACM</h1>
         <p className="text-xs md:text-sm font-bold text-blue-800 tracking-wide">Automated Cabinet Management System</p>
