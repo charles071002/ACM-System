@@ -369,8 +369,8 @@ const FloorQrGalleryModal: React.FC<FloorQrGalleryModalProps> = ({ professor, on
                     </button>
                   </div>
 
-                  <div className="flex w-fit max-w-full flex-col items-center gap-2">
-                    <span className="max-w-[9.5rem] text-center text-sm font-black leading-tight tracking-wide text-blue-900 sm:max-w-none sm:text-base">
+                  <div className="flex w-full min-w-0 max-w-full flex-col items-center gap-2">
+                    <span className="max-w-full overflow-x-auto whitespace-nowrap text-center text-[10px] font-black leading-tight tracking-tight text-blue-900 sm:text-xs md:text-sm [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                       {displaySchedule}
                     </span>
                     <div className="flex w-fit max-w-full flex-col items-center gap-2 rounded-2xl border border-blue-100 bg-blue-50/60 px-2.5 py-3 shadow-inner sm:px-3 sm:py-3.5">
@@ -394,11 +394,11 @@ const FloorQrGalleryModal: React.FC<FloorQrGalleryModalProps> = ({ professor, on
                       }}
                       className={
                         isQrActive
-                          ? 'w-full min-w-[7.5rem] max-w-[10.5rem] rounded-xl border-b-2 border-red-800 bg-red-600 py-2 text-center text-[9px] font-black uppercase tracking-widest text-white shadow-sm transition hover:bg-red-700 active:scale-95 sm:min-w-[8.5rem] sm:text-[10px]'
-                          : 'w-full min-w-[7.5rem] max-w-[10.5rem] rounded-xl border-b-2 border-green-800 bg-green-600 py-2 text-center text-[9px] font-black uppercase tracking-widest text-white shadow-sm transition hover:bg-green-700 active:scale-95 sm:min-w-[8.5rem] sm:text-[10px]'
+                          ? 'w-full min-w-[7.5rem] max-w-[10.5rem] rounded-xl border-b-2 border-green-800 bg-green-600 py-2 text-center text-[9px] font-black uppercase tracking-widest text-white shadow-sm transition hover:bg-green-700 active:scale-95 sm:min-w-[8.5rem] sm:text-[10px]'
+                          : 'w-full min-w-[7.5rem] max-w-[10.5rem] rounded-xl border-b-2 border-red-800 bg-red-600 py-2 text-center text-[9px] font-black uppercase tracking-widest text-white shadow-sm transition hover:bg-red-700 active:scale-95 sm:min-w-[8.5rem] sm:text-[10px]'
                       }
                     >
-                      {isQrActive ? 'DEACTIVATE' : 'ACTIVATE'}
+                      {isQrActive ? 'ON' : 'OFF'}
                     </button>
                   </div>
                 </div>
